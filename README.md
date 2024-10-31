@@ -18,3 +18,26 @@ Course project for Group 8 in 02242 Program Analysis at DTU
     This is what the programmer used in the declaration of the variable. 
     Names for standard types should use Java’s names (e.g., int, boolean, java.lang.String, etc.), but names for user-defined or language-specific types can be arbitrary strings. 
     A dec-type entry is required in each variable block.
+    
+    rep-type <daikon-type>
+    The representation type should be one of boolean, int, hashcode, double, or java.lang.String; or an array of one of those (indicated by a [..] suffix). 
+    
+    shouldn't be a problem for us, is only when rep-type!=dec-type
+
+    flag <flags>
+    
+    is_param -> parameters of a function
+    no_dups -> array without duplicates (set)
+    not_ordered -> for arrays
+    nomod -> constant variable
+
+    comparability <int>
+    in the example all variables with comparability 22 are comparable between each other (eg are all int)
+    so i guess we can make a list of types and all the same type have their index as comparability value
+
+    parent <relation-type> <parent-ppt-name> <relation-id>
+
+    Specifies the program point hierarchy 
+    this looks hard maybe we just put the class name and hope for the best
+    
+[Dataflow hierarchy](https://plse.cs.washington.edu/daikon/download/doc/developer/Daikon-internals.html#Dataflow-hierarchy). 
