@@ -41,3 +41,37 @@ Course project for Group 8 in 02242 Program Analysis at DTU
     this looks hard maybe we just put the class name and hope for the best
     
 [Dataflow hierarchy](https://plse.cs.washington.edu/daikon/download/doc/developer/Daikon-internals.html#Dataflow-hierarchy). 
+
+### Data trace records
+[from](https://plse.cs.washington.edu/daikon/download/doc/developer/File-formats.html#Data-trace-records)
+
+A data trace record (also known as a sample) contains run-time value information. Its format is:
+
+    <program-point-name>
+    this_invocation_nonce
+    <nonce-string>
+    <varname-1>
+    <var-value-1>
+    <var-modified-1>
+    <varname2>
+    <var-value-2>
+    <var-modified-2>
+
+In other words, the sample record contains:
+
+    name of the program point
+    optionally, an arbitrary string (a nonce) used to match up procedure entries (whose names conventionally end with :::ENTER) with procedure exits (whose names conventionally end with :::EXIT). This is necessary in concurrent systems because there may be several invocations of a procedure active at once and they do not necessarily follow a stack discipline, being exited in the reverse order of entry. For non-concurrent systems, this nonce is not necessary, and both the line this_invocation_nonce and the nonce value may be omitted.
+    for each variable:
+        name
+        value
+            if an integer: sequence of digits, optionally preceded by a minus sign. Boolean values are written as the number 0 (for false) or the number 1 (for true). For pointers, the value may be null.
+            if a string: characters surrounded by double-quotes. Internal double-quotes and backslashes are escaped by a backslash. Newlines and carriage returns are represented as ‘\n’ and ‘\r’, respectively.
+            if an array: open bracket ([), elements separated by spaces, close bracket (]). (Also, the array name should end in ‘[..]’; use ‘a[..]’ for array contents, but ‘a’ for the identity of the array itself.) 
+
+        The value representation may also be the string nonsensical; see Nonsensical values. A string or array value is never null. A reference to a string or array may be null, in which case the string or array value is printed as nonsensical.
+        modified? (0, 1, or 2). This value is 0 if the variable has not been assigned to since the last time this program point was executed, and 1 if the variable has been assigned to since then. It is safe for an implementation to always set it to 1. It is also safe to always set it to 0, because Daikon corrects obviously incorrect modification bits (such as 0 for a never-before-seen value).
+
+        The special value 2 should be used only (and always) when the value field is nonsensical.
+
+    The variables should appear in the same order as they did in the declaration of the program point, without omissions or additions. 
+![alt text](imgs/data_trace.png)
