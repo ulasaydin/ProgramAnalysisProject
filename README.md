@@ -42,8 +42,17 @@ Course project for Group 8 in 02242 Program Analysis at DTU
     
 [Dataflow hierarchy](https://plse.cs.washington.edu/daikon/download/doc/developer/Daikon-internals.html#Dataflow-hierarchy). 
 
-### Data trace records
+## Data trace records
+### Data trace tutorial:
+
+    python3 datatracer.py <file-with-function.py>
+
+This creates a file with the instrumenter instruction, the function has to be called (there's no function call by default cause it should be called by Pynguin) and the output redirected to Daikon.
+![file with instrumenter](imgs/dtrace_example.png)
+![Daikon instrumenter file](imgs/dtrace_execution.png)
 [from](https://plse.cs.washington.edu/daikon/download/doc/developer/File-formats.html#Data-trace-records)
+
+### Data trace requirements for Daikon
 
 A data trace record (also known as a sample) contains run-time value information. Its format is:
 
