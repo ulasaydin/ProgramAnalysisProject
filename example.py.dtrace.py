@@ -11,9 +11,24 @@ def variablePrinter(var_name):
 			print(0) # if true 
 	elif (isinstance(var_name, list)):  
 		print('['+' '.join(var_name+']'))
-		
+	print('1') #modified
 def client(n: int) -> int:
 	print('client:::ENTER') 
 	print('n') 
 	variablePrinter(n)
-	print(1) 
+	i = 0
+	print('i') 
+	variablePrinter(i)
+	sum = 0
+	print('sum') 
+	variablePrinter(sum)
+	while i < n:
+		i += 1
+		print('i ') 
+		variablePrinter(i )
+		sum += i
+		print('sum ') 
+		variablePrinter(sum )
+	print('client:::EXIT') 
+
+client(5)
