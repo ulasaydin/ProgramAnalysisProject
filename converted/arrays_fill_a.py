@@ -1,5 +1,5 @@
 from nagini_contracts.contracts import *
-from theories.TArrays import eq
+from theories.TArrays import eq, within
 
 """
 /**
@@ -33,17 +33,13 @@ public static void fill0(int[] a, int val) {
 """
 
 def fill_a(arr: list[int], val: int) -> None:
-    Requires(list_pred(arr))
     Requires(Acc(list_pred(arr)))
-    Ensures(eq(arr, 0, len(arr), val))
+    Ensures(Acc(list_pred(arr)) and eq(arr, 0, len(arr), val))
 
     ic = 0
-    l = len(arr)
 
-    while ic < l:
-        Invariant(0 <= ic and ic <= l)
-        Invariant(eq(arr, 0, ic, val))
+    while ic < len(arr):
+        Invariant(Acc(list_pred(arr), 1/2) and 0 <= ic and ic <= len(arr))
+        Invariant(Acc(list_pred(arr), 1/2) and within(arr, 0, ic) and eq(arr, 0, ic, val))
         arr[ic] = val
         ic = ic + 1
-
-    Assert(False)

@@ -30,7 +30,7 @@ from nagini_contracts.contracts import *
 """
 @Pure
 def within(a: list[int], fromIndex: int, toIndex: int) -> bool:
-    Requires(list_pred(a))
+    Requires(Acc(list_pred(a), 1/2))
     Ensures(Result() == (0 <= fromIndex and fromIndex <= toIndex and toIndex <= len(a)))
 
     return 0 <= fromIndex and fromIndex <= toIndex and toIndex <= len(a)
@@ -77,8 +77,7 @@ def within(a: list[int], fromIndex: int, toIndex: int) -> bool:
 
 @Pure
 def eq(a: list[int], fromIndex: int, toIndex: int, key: int) -> bool:
-    Requires(list_pred(a))
-    Requires(within(a, fromIndex, toIndex))
+    Requires(Acc(list_pred(a), 1/2) and within(a, fromIndex, toIndex))
     Ensures(Result() == Forall(int, lambda i: Implies(fromIndex <= i and i < toIndex, a[i] == key)))
 
     if fromIndex >= toIndex:
