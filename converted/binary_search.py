@@ -1,4 +1,5 @@
 from nagini_contracts.contracts import *
+from theories.TArrays import sorted, within, TArraysIn, less, grt
 
 """
 /*@
@@ -42,9 +43,30 @@ from nagini_contracts.contracts import *
 
 
 def binary_search(a: list[int], fromIndex: int, toIndex: int, key: int) -> int:
+    Requires(Acc(list_pred(a)))
+    Requires(within(a, fromIndex, toIndex))
+    Requires(sorted(a, fromIndex, toIndex))
+    Ensures(Acc(list_pred(a)))
+    Ensures(len(a) == Old(len(a)))
+    Ensures(Result() < len(a))
+    Ensures(Implies(Result() >= 0, a[Result()] == key))
+    Ensures(Implies(Result() < 0, not TArraysIn(a, fromIndex, toIndex, key)))
+
     low = fromIndex
     high = toIndex - 1
+
     while low <= high:
+        Invariant(Acc(list_pred(a)))
+        Invariant(len(a) == Old(len(a)))
+        Invariant(0 <= fromIndex and fromIndex <= toIndex and toIndex <= len(a))
+        Invariant(high >= -1)
+        Invariant(fromIndex <= low)
+        Invariant(low <= high + 1)
+        Invariant(high < toIndex)
+        Invariant(sorted(a, fromIndex, toIndex))
+        Invariant(less(a, fromIndex, low, key))
+        Invariant(grt(a, high + 1, toIndex, key))
+
         mid = low + (high - low) // 2
         midVal = a[mid]
         if midVal < key:
