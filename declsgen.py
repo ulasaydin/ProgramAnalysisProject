@@ -6,6 +6,7 @@ import sys
 class DeclGenerator(ast.NodeVisitor):
     def __init__(self):
         self.decls_content = ""
+        self.decls_content += "decl-version 2.0\n"
 
     def visit_FunctionDef(self, node):
         # Define function entry point
@@ -17,6 +18,9 @@ class DeclGenerator(ast.NodeVisitor):
             if arg.annotation:
                 arg_type = self.get_type_from_annotation(arg.annotation)
             self.add_variable_entry(arg.arg, "variable", arg_type, "ENTER")
+
+        # Add newline
+        self.decls_content += "\n"
 
         # Define the function exit point
         self.decls_content += f"ppt {node.name}:::EXIT\n"
