@@ -7,6 +7,8 @@ class DeclGenerator(ast.NodeVisitor):
     def __init__(self):
         self.decls_content = ""
         self.decls_content += "decl-version 2.0\n"
+        self.enter_vars = []
+        self.exit_vars = []
 
     def visit_FunctionDef(self, node):
         # Define function entry point
@@ -18,6 +20,9 @@ class DeclGenerator(ast.NodeVisitor):
             if arg.annotation:
                 arg_type = self.get_type_from_annotation(arg.annotation)
             self.add_variable_entry(arg.arg, "variable", arg_type, "ENTER")
+
+        for enter_var in self.enter_vars:
+            self.decls_content += enter_var
 
         # Add newline
         self.decls_content += "\n"
@@ -39,6 +44,11 @@ class DeclGenerator(ast.NodeVisitor):
             elif isinstance(stmt, ast.Return):  # Return statement
                 return_type = self.get_type_from_value(stmt.value)
                 self.add_variable_entry("return", "return", return_type, "EXIT")
+
+        for enter_var in self.enter_vars:
+            self.decls_content += enter_var
+        for exit_var in self.exit_vars:
+            self.decls_content += exit_var
 
     def get_type_from_annotation(self, annotation):
         """Converts annotation node to a type name."""
@@ -78,14 +88,17 @@ class DeclGenerator(ast.NodeVisitor):
         return "unknown"
 
     def add_variable_entry(self, name, kind, dec_type, ppt):
+        var_props = ""
         """Adds a variable entry to the decls content."""
-        self.decls_content += f"  variable {name}\n"
-        self.decls_content += f"    var-kind {kind}\n"
-        self.decls_content += f"    dec-type {dec_type}\n"
-        self.decls_content += f"    rep-type {dec_type}\n"
-        self.decls_content += (
-            "    comparability 5\n"  # Using a default comparability value
-        )
+        var_props += f"  variable {name}\n"
+        var_props += f"    var-kind {kind}\n"
+        var_props += f"    dec-type {dec_type}\n"
+        var_props += f"    rep-type {dec_type}\n"
+        var_props += "    comparability 5\n"  # Using a default comparability value
+        if ppt == "ENTER":
+            self.enter_vars.append(var_props)
+        elif ppt == "EXIT":
+            self.exit_vars.append(var_props)
 
     def generate_decls(self, filename):
         """Parse a Python file and generate decls content."""
