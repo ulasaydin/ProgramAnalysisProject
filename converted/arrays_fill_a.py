@@ -32,14 +32,18 @@ public static void fill0(int[] a, int val) {
 }
 """
 
-def fill_a(arr: list[int], val: int) -> None:
-    Requires(Acc(list_pred(arr)))
-    Ensures(Acc(list_pred(arr)) and eq(arr, 0, len(arr), val))
+def fill_a(a: list[int], val: int) -> None:
+    Requires(Acc(list_pred(a)))
+    Ensures(Acc(list_pred(a)))
+    Ensures(eq(a, 0, len(a), val))
 
     ic = 0
+    l = len(a)
 
-    while ic < len(arr):
-        Invariant(Acc(list_pred(arr), 1/2) and 0 <= ic and ic <= len(arr))
-        Invariant(Acc(list_pred(arr), 1/2) and within(arr, 0, ic) and eq(arr, 0, ic, val))
-        arr[ic] = val
-        ic = ic + 1
+    while ic < l:
+        Invariant(Acc(list_pred(a)))
+        Invariant(l == len(a))
+        Invariant(0 <= ic and ic <= l)
+        Invariant(eq(a, 0, ic, val))
+        a[ic] = val
+        ic += 1

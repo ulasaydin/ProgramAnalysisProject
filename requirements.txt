@@ -1,2 +1,4 @@
 tree-sitter
 tree-sitter-python
+mypy==0.902
+nagini
