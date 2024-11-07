@@ -67,27 +67,42 @@ from nagini_contracts.contracts import *
 from theories.TArrays import *
 
 def fill_b(a: list[int], from_index: int, to_index: int, val: int) -> None:
+    Requires(a is not None) # Might be unnecessary, but identical to java
+    Requires(Acc(list_pred(a)) and within(a, from_index, to_index))
+    # Requires(from_index <= to_index)
+    # Requires(0 <= from_index)
+    # Requires(to_index < len(a))
+    # Ensures(within(a, from_index, to_index))
+    # Ensures(len(a) == len(Old(a)))
 
-    # Requires(a is not None)
-    # Requires(0 <= from_index <= to_index <= len(a))
-    
-    # Ensures(all(a[j] == val for j in range(from_index, to_index)))
-    # Ensures(all(a[j] == a[j] for j in range(from_index, to_index)))
-    # Ensures(all(a[j] == a[j] for j in range(from_index, len(a))))
-    # Requires(Acc(list_pred(a)))
-    # Requires(Acc(a[from_index:to_index]))
-    Requires(list_pred(a))
-    Requires(Acc(list_pred(a)))
+    Ensures(Acc(list_pred(a)))
+    Ensures(Forall(int, lambda j: Implies(0 <= j and j < from_index, Old(a[j]) == a[j])))
     Ensures(eq(a, from_index, to_index, val))
+    Ensures(Forall(int, lambda j: Implies(to_index <= j and j < len(a), a[j] == Old(a[j]))))
+    
+    # Not working, but tried to implement exceptional behaviors like in Java
+    Exsures(ValueError, from_index > to_index)
+    Exsures(IndexError, from_index < 0 or to_index > len(a))
+    Exsures(TypeError, a is None)
+
+    if a is None:
+        raise TypeError
+    if from_index > to_index:
+        raise ValueError
+    if from_index < 0 or to_index > len(a):
+        raise IndexError
 
     ic = from_index
-    l = to_index
 
-    while(ic < l):
+    while(ic < to_index):
+        Invariant(Acc(list_pred(a)))
+        # Invariant(within(a, from_index, ic))
         Invariant(from_index <= ic and ic <= to_index)
-        # Invariant(all(a[j] == a[j] for j in range(0, from_index)))
+        Invariant(Forall(int, lambda j: Implies(0 <= j and j < from_index and j < to_index, Old(a[j]) == a[j])))
+        Invariant(eq(a, from_index, ic, val))
+        Invariant(Forall(int, lambda j: Implies(to_index <= j and j < len(a), a[j] == Old(a[j]))))
 
         a[ic] = val
         ic += 1
 
-    Assert(False)
+    # Assert(False)
