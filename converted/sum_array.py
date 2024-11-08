@@ -5,29 +5,36 @@ from theories.TArrays import within
 def sum_pure(a: list[int], fromIndex: int, toIndex: int) -> int:
     Requires(Acc(list_pred(a)))
     Requires(len(a) > 0)
-    Requires(0 <= fromIndex and fromIndex <= toIndex and toIndex < len(a))
+    Requires(within(a, fromIndex, toIndex))
 
-    if fromIndex >= toIndex:
-        return a[0]
-    else:
-        return a[toIndex] + sum_pure(a, fromIndex, toIndex - 1)
+    if fromIndex == toIndex:
+        return 0
+    return a[toIndex - 1] + sum_pure(a, fromIndex, toIndex - 1)
 
 def sum_list(a: list[int]) -> int:
     Requires(Acc(list_pred(a)))
     Requires(len(a) > 0)
     Ensures(Acc(list_pred(a)))
     Ensures(len(a) == Old(len(a)))
-    Ensures(Result() == sum_pure(a, 0, len(a) - 1))
+    Ensures(Result() == sum_pure(a, 0, len(a)))
 
     i = 0
-    s = a[0]
+    s = 0
+
+    Assert(0 == sum_pure(a, 0, i))
+    Assert(a[0] == sum_pure(a, 0, 1))
 
     while i < len(a):
         Invariant(Acc(list_pred(a)))
         Invariant(len(a) == Old(len(a)))
         Invariant(0 <= i and i <= len(a))
-        Invariant(Implies(i < len(a), s == sum_pure(a, 0, i)))
+        Invariant(s == sum_pure(a, 0, i))
         s += a[i]
         i += 1
+        Assert(sum_pure(a, 0, i) == sum_pure(a, 0, i - 1) + a[i - 1])
     
     return s
+
+if __name__ == "__main__":
+    print(sum_pure([1, 2, 3], 0, 3))
+    print(sum_list([1, 2, 3]))
