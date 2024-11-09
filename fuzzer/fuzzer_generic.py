@@ -2,7 +2,7 @@ import random
 import sys
 import os
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "../../converted"))
+sys.path.append(os.path.join(os.path.dirname(__file__), "../converted"))
 
 def fuzzer_generic(target_function, num_cases=10, input_gen_func=None, 
                    expected_value_func=None, loop_line_offset=None):
@@ -81,6 +81,7 @@ def fuzzer_generic(target_function, num_cases=10, input_gen_func=None,
 from sum_one_to_n import sum_one_to_n  # Import the sum_one_to_n function
 from min_array import min_list  # Import the min_list function
 from max_array import max_list  # Import the max_list function
+from sum_array import sum_list  # Import the sum_list function
 
 # Define input generator, expected value function, and loop line offset for sum_one_to_n
 input_gen_sum = lambda: random.randint(0, 100)
@@ -102,3 +103,10 @@ expected_value_max_list = lambda xs: max(xs)
 loop_line_offset_max_list = 11  # Adjust to the line where `while` is located in max_list
 
 fuzzer_generic(max_list, input_gen_func=input_gen_max_list, expected_value_func=expected_value_max_list, loop_line_offset=loop_line_offset_max_list)
+
+# Define input generator, expected value function, and loop line offset for sum_list
+input_gen_sum_list = lambda: [random.randint(-100, 100) for _ in range(random.randint(1, 10))]
+expected_value_sum_list = lambda xs: sum(xs)
+loop_line_offset_sum_list = 14  # Adjust to the line where `while` is located in sum_list
+
+fuzzer_generic(sum_list, input_gen_func=input_gen_sum_list, expected_value_func=expected_value_sum_list, loop_line_offset=loop_line_offset_sum_list)
