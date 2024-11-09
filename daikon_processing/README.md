@@ -5,7 +5,7 @@ Course project for Group 8 in 02242 Program Analysis at DTU
 
 ### Declare variables
 [From](https://plse.cs.washington.edu/daikon/download/doc/developer/File-formats.html#Variable-declarations)
-![yo](imgs/variables_declaration.png)
+![yo](../imgs/variables_declaration.png)
 
     var-kind <kind> [<relative-name>]
 
@@ -48,8 +48,8 @@ Course project for Group 8 in 02242 Program Analysis at DTU
     python3 datatracer.py <file-with-function.py>
 
 This creates a file with the instrumenter instruction, the function has to be called (there's no function call by default cause it should be called by Pynguin) and the output redirected to Daikon.
-![file with instrumenter](imgs/dtrace_example.png)
-![Daikon instrumenter file](imgs/dtrace_execution.png)
+![file with instrumenter](../imgs/dtrace_example.png)
+![Daikon instrumenter file](../imgs/dtrace_execution.png)
 [from](https://plse.cs.washington.edu/daikon/download/doc/developer/File-formats.html#Data-trace-records)
 
 ### Data trace requirements for Daikon
@@ -83,4 +83,4 @@ In other words, the sample record contains:
         The special value 2 should be used only (and always) when the value field is nonsensical.
 
     The variables should appear in the same order as they did in the declaration of the program point, without omissions or additions. 
-![alt text](imgs/data_trace.png)
+![alt text](../imgs/data_trace.png)

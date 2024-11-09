@@ -1,0 +1,173 @@
+// Declarations for Array
+// Declarations written by Chicory 2024-11-08T12:49:14.071527
+
+decl-version 2.0
+var-comparability implicit
+
+ppt Array.Array():::ENTER
+ppt-type enter
+
+ppt Array.Array():::EXIT1
+ppt-type subexit
+parent parent Array:::OBJECT 1
+variable this
+  var-kind variable
+  dec-type Array
+  rep-type hashcode
+  flags is_param non_null
+  comparability 2
+  parent Array:::OBJECT 1
+
+ppt Array.main(java.lang.String[]):::ENTER
+ppt-type enter
+variable arg0
+  var-kind variable
+  dec-type java.lang.String[]
+  rep-type hashcode
+  flags is_param
+  comparability 2
+variable arg0.getClass().getName()
+  var-kind function getClass().getName()
+  enclosing-var arg0
+  dec-type java.lang.Class
+  rep-type java.lang.String
+  function-args arg0
+  flags synthetic classname non_null
+  comparability 1
+variable arg0[..]
+  var-kind array
+  enclosing-var arg0
+  array 1
+  dec-type java.lang.String[]
+  rep-type hashcode[]
+  comparability 3[5]
+variable arg0[..].toString
+  var-kind function toString()
+  enclosing-var arg0[..]
+  array 1
+  dec-type java.lang.String[]
+  rep-type java.lang.String[]
+  function-args arg0[]
+  flags synthetic to_string
+  comparability 4[6]
+
+ppt Array.main(java.lang.String[]):::EXIT4
+ppt-type subexit
+variable arg0
+  var-kind variable
+  dec-type java.lang.String[]
+  rep-type hashcode
+  flags is_param
+  comparability 2
+variable arg0.getClass().getName()
+  var-kind function getClass().getName()
+  enclosing-var arg0
+  dec-type java.lang.Class
+  rep-type java.lang.String
+  function-args arg0
+  flags synthetic classname non_null
+  comparability 1
+variable arg0[..]
+  var-kind array
+  enclosing-var arg0
+  array 1
+  dec-type java.lang.String[]
+  rep-type hashcode[]
+  comparability 3[5]
+variable arg0[..].toString
+  var-kind function toString()
+  enclosing-var arg0[..]
+  array 1
+  dec-type java.lang.String[]
+  rep-type java.lang.String[]
+  function-args arg0[]
+  flags synthetic to_string
+  comparability 4[6]
+
+ppt Array.fill0(int[],\_int):::ENTER
+ppt-type enter
+variable arg0
+  var-kind variable
+  dec-type int[]
+  rep-type hashcode
+  flags is_param
+  comparability 2
+variable arg0[..]
+  var-kind array
+  enclosing-var arg0
+  array 1
+  dec-type int[]
+  rep-type int[]
+  comparability 3[5]
+variable arg1
+  var-kind variable
+  dec-type int
+  rep-type int
+  flags is_param
+  comparability 4
+
+ppt Array.fill0(int[],\_int):::EXIT16
+ppt-type subexit
+variable arg0
+  var-kind variable
+  dec-type int[]
+  rep-type hashcode
+  flags is_param
+  comparability 2
+variable arg0[..]
+  var-kind array
+  enclosing-var arg0
+  array 1
+  dec-type int[]
+  rep-type int[]
+  comparability 3[5]
+variable arg1
+  var-kind variable
+  dec-type int
+  rep-type int
+  flags is_param
+  comparability 4
+
+ppt Array:::OBJECT
+ppt-type object
+variable this
+  var-kind variable
+  dec-type Array
+  rep-type hashcode
+  flags is_param non_null
+  comparability 2
+
+Array.main(java.lang.String[]):::ENTER
+this_invocation_nonce
+0
+arg0
+1780132728
+1
+arg0.getClass().getName()
+"java.lang.String[]"
+1
+arg0[..]
+[]
+1
+arg0[..].toString
+[]
+1
+
+Array.main(java.lang.String[]):::EXIT4
+this_invocation_nonce
+0
+arg0
+1780132728
+1
+arg0.getClass().getName()
+"java.lang.String[]"
+1
+arg0[..]
+[]
+1
+arg0[..].toString
+[]
+1
+
+
+# EOF (added by Runtime.addShutdownHook)

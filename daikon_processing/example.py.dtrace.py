@@ -30,3 +30,5 @@ def client(n: int) -> int:
 		print('sum ') 
 		variablePrinter(sum )
 	print('client:::EXIT') 
+
+client(5)
