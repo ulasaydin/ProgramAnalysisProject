@@ -1,20 +1,40 @@
 import sys
 # check example.py.dtrace.py for output
 
-var_print_fun = "def variablePrinter(var_name): \n"+\
-"\t"+   "# int -> just print \n"+\
-"\t"+   "# bool -> print 1/0 \n"+\
-"\t"+   "# array -> [ 1 2 3 4 5] \n"+\
-"\t"+   "if (isinstance(var_name, int)):\n"+\
-"\t"+   "\tprint(var_name)\n"+\
-"\t"+   "elif (isinstance(var_name, bool)):\n"+\
-"\t"+   "\tif (var_name): # if true \n"+\
-"\t"+   "\t\tprint(1) \n"+\
-"\t"+   "\telse: # if true \n"+\
-"\t"+   "\t\tprint(0) # if true \n"+\
-"\t"+   "elif (isinstance(var_name, list)):  \n"+\
-"\t"+   "\tprint(\'[\'+\' \'.join(var_name+\']\'))\n"\
-"\t"+   "print('1') #modified\n"
+var_print_fun = r"""type_comparability = {'index':1}
+print('decl-version 2.0')
+def variablePrinter(var, dtrace): 
+	# int -> just print 
+	# bool -> print 1/0 
+	# array -> [ 1 2 3 4 5] 
+	if dtrace: 
+		if (isinstance(var, int)):
+			print(var)
+		elif (isinstance(var, bool)):
+			if (var): # if true 
+				print(1) 
+			else: # if true 
+				print(0) # if true 
+		elif (isinstance(var, list)):  
+			print('['+' '.join(str(x) for x in var)+']')
+		print('1') #modified
+	else:
+		if (isinstance(var, int)):
+			print('var-kind variable\ndec-type int\nrep-type int')
+			if ('int' not in type_comparability):
+				type_comparability['int'] = type_comparability['index'] 
+				type_comparability['index'] += 1 
+			print('comparability', type_comparability['int'])
+		elif (isinstance(var, bool)):
+			print('var-kind variable\ndec-type bool\nrep-type bool')
+			if ('bool' not in type_comparability):
+				type_comparability['bool'] = type_comparability['index']  
+				type_comparability['index'] += 1 
+			print('comparability',type_comparability['bool'])
+		elif (isinstance(var, list)):  
+			print('['+' '.join(str(x) for x in var)+']')
+
+"""
 
 
 def functionVariableReader(var_string, status):
@@ -30,18 +50,21 @@ def line_analyser(line, status):
     line = line.replace('    ','\t')
     while i<len(line) and line[i]=='\t':
         i+=1
-
-    if status['depth'] > i and status['iter_invariant_stack']:
+    if line=='':
+        fout.write('\n')
+        return
+    if status['loop_depth'] > i and status['iter_invariant_stack']:
         fout.write('\n'+'\t'*status['depth']+f"print('\\n{status['iter_invariant_stack'][-1]}:::EXIT{status['exit_counter']}') \n")
         for var_name in status['variables']:
             fout.write('\t'*status['depth']+f"print('{var_name}') \n")   #var name
-            fout.write('\t'*status['depth']+f'variablePrinter({var_name})\n')   #var value
+            fout.write('\t'*status['depth']+f'variablePrinter({var_name},True)\n')   #var value
+        status['iter_invariant_stack'].pop()
 
         status['depth'] = i
         fout.write('\n'+'\t'*status['depth']+f"print('\\n{status['loop_invariant_stack'][-1]}:::EXIT{status['exit_counter']}') \n")
         for var_name in status['variables']:
             fout.write('\t'*status['depth']+f"print('{var_name}') \n")   #var name
-            fout.write('\t'*status['depth']+f'variablePrinter({var_name})\n')   #var value
+            fout.write('\t'*status['depth']+f'variablePrinter({var_name}, True)\n')   #var value
         status['loop_invariant_stack'].pop()
         status['exit_counter'] += 1
 
@@ -69,11 +92,24 @@ def line_analyser(line, status):
         status['loop_invariant_stack'].append('loop_inv_'+ str(status['loop_invariant_counter'])+'()')
         status['loop_invariant_counter'] += 1
 
+        #declaration printer
+        fout.write('\t'*status['depth']+f"print('\\nppt {status['loop_invariant_stack'][-1]}:::ENTER') \n")
+        for var_name in status['variables']:
+            fout.write('\t'*status['depth']+f"print('variable {var_name}') \n")   #var name
+            fout.write('\t'*status['depth']+f'variablePrinter({var_name}, False)\n')   #var value
+        fout.write('\t'*status['depth']+f"print('\\nppt {status['loop_invariant_stack'][-1]}:::EXIT{status['exit_counter']}') \n")
+        for var_name in status['variables']:
+            fout.write('\t'*status['depth']+f"print('variable {var_name}') \n")   #var name
+            fout.write('\t'*status['depth']+f'variablePrinter({var_name}, False)\n')   #var value
+
+        #datatrace printer
         fout.write('\t'*status['depth']+f"print('\\n{status['loop_invariant_stack'][-1]}:::ENTER') \n")
         for var_name in status['variables']:
             fout.write('\t'*status['depth']+f"print('{var_name}') \n")   #var name
-            fout.write('\t'*status['depth']+f'variablePrinter({var_name})\n')   #var value
+            fout.write('\t'*status['depth']+f'variablePrinter({var_name}, True)\n')   #var value
         
+        #bool for iterations
+        fout.write('\t'*status['depth']+f"first_iter = True\n")
         fout.write(line + "\n")
     elif 'Invariant' in line:
         if not status['just_entered_invariant']:
@@ -82,12 +118,28 @@ def line_analyser(line, status):
             name = "iter_inv_" + str(status['iter_invariant_counter'])
             status['iter_invariant_counter'] += 1
             name+="()"
+            status['loop_depth'] = status['depth']
             
             status['iter_invariant_stack'].append(name)
+            
+            #bool check
+            fout.write('\t'*status['depth']+f"if first_iter:\n")
+            fout.write('\t'*(status['depth']+1)+f"first_iter = False\n")
+            #declaration printer
+            fout.write('\t'*(status['depth']+1)+f"print('\\nppt {status['iter_invariant_stack'][-1]}:::ENTER') \n")
+            for var_name in status['variables']:
+                fout.write('\t'*(status['depth']+1)+f"print('variable {var_name}') \n")   #var name
+                fout.write('\t'*(status['depth']+1)+f'variablePrinter({var_name}, False)\n')   #var value
+            fout.write('\t'*(status['depth']+1)+f"print('\\nppt {status['iter_invariant_stack'][-1]}:::EXIT{status['exit_counter']}') \n")
+            for var_name in status['variables']:
+                fout.write('\t'*(status['depth']+1)+f"print('variable {var_name}') \n")   #var name
+                fout.write('\t'*(status['depth']+1)+f'variablePrinter({var_name}, False)\n')   #var value
+
+            #datatrace printer
             fout.write('\t'*status['depth']+f"print('\\n{status['iter_invariant_stack'][-1]}:::ENTER') \n")
             for var_name in status['variables']:
                 fout.write('\t'*status['depth']+f"print('{var_name}') \n")   #var name
-                fout.write('\t'*status['depth']+f'variablePrinter({var_name})\n')   #var value
+                fout.write('\t'*status['depth']+f'variablePrinter({var_name}, True)\n')   #var value
         else:
             return
     elif 'if'not in line and '=' in line:
@@ -121,6 +173,7 @@ status = {
     'loop_invariant_stack': [],
     'iter_invariant_counter': 0,
     'iter_invariant_stack': [],
+    'loop_depth': 0,
     'exit_counter': 1,
     'depth': 0,
     'variables': []

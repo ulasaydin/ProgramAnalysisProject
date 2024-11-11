@@ -1,3 +1,38 @@
+decl-version 2.0
+
+ppt loop_inv_0():::ENTER
+variable n
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+variable i
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+variable sum
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+
+ppt loop_inv_0():::EXIT1
+variable n
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+variable i
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+variable sum
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
 
 loop_inv_0():::ENTER
 n
@@ -9,6 +44,40 @@ i
 sum
 0
 1
+
+ppt iter_inv_0():::ENTER
+variable n
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+variable i
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+variable sum
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+
+ppt iter_inv_0():::EXIT1
+variable n
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+variable i
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
+variable sum
+var-kind variable
+dec-type int
+rep-type int
+comparability 1
 
 iter_inv_0():::ENTER
 n

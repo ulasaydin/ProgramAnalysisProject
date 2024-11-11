@@ -14,27 +14,13 @@ The program does not add any call to the main function of the input file, this m
 
 This will create the dtrace that has to be analysed by Daikon, if you are on windows the file may be encoded in UTF-16, re-encode it in UTF-8.
 
-### declsgen.py
-
-For Kalle: 
-
-for each loop we are considering two invariants: one for the whole loop, one for each iteration of the loop (check [here](examplepy_loop_invariant/example.py)).
-
-Take a look at [example.decls](examplepy_loop_invariant/example.decls) which is the file you should generate.
-
-So all loop invariants should be called loop_inv_X where X is a number starting from 0, X increases for each loop in order of row number in the file. Same is done for the iteration invariant called iter_inv_X.
-
-No variable is passed to them, all the variables are listed in order of appeareance in the input file: I pass all the variable declared before the loop in the same function as the loop (including the one passed as arguments to the function).
-
-The EXITs need a number after them, for now I use X+1.
-
 ### Run Daikon
 
 Download Daikon [here](https://plse.cs.washington.edu/daikon/download/).
 
 Run it by:
 
-    java -cp  daikon.jar daikon.Daikon filename.decls filename.dtrace
+    java -cp  daikon.jar daikon.Daikon filename_1.dtrace filename_2.dtrace
 
 ## Daikon documentation for further development
 
