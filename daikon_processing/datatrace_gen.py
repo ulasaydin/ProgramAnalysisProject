@@ -31,13 +31,19 @@ def line_analyser(line, status):
     while i<len(line) and line[i]=='\t':
         i+=1
 
-    if status['depth'] > i and status['invariant_name']:
-        fout.write('\n'+'\t'*status['depth']+f"print('\\n{status['invariant_name'][-1]}:::EXIT{status['exit_counter']}') \n")
-        status['exit_counter'] += 1
+    if status['depth'] > i and status['iter_invariant_stack']:
+        fout.write('\n'+'\t'*status['depth']+f"print('\\n{status['iter_invariant_stack'][-1]}:::EXIT{status['exit_counter']}') \n")
         for var_name in status['variables']:
             fout.write('\t'*status['depth']+f"print('{var_name}') \n")   #var name
             fout.write('\t'*status['depth']+f'variablePrinter({var_name})\n')   #var value
-        status['invariant_name'].pop()
+
+        status['depth'] = i
+        fout.write('\n'+'\t'*status['depth']+f"print('\\n{status['loop_invariant_stack'][-1]}:::EXIT{status['exit_counter']}') \n")
+        for var_name in status['variables']:
+            fout.write('\t'*status['depth']+f"print('{var_name}') \n")   #var name
+            fout.write('\t'*status['depth']+f'variablePrinter({var_name})\n')   #var value
+        status['loop_invariant_stack'].pop()
+        status['exit_counter'] += 1
 
     status['depth'] = i
 
@@ -59,24 +65,26 @@ def line_analyser(line, status):
         fout.write(line + "\n")
     elif 'Requires' in line or 'Ensures' in line or 'Assert' in line:
         return
+    elif 'while' in line or 'for' in line:
+        status['loop_invariant_stack'].append('loop_inv_'+ str(status['loop_invariant_counter'])+'()')
+        status['loop_invariant_counter'] += 1
+
+        fout.write('\t'*status['depth']+f"print('\\n{status['loop_invariant_stack'][-1]}:::ENTER') \n")
+        for var_name in status['variables']:
+            fout.write('\t'*status['depth']+f"print('{var_name}') \n")   #var name
+            fout.write('\t'*status['depth']+f'variablePrinter({var_name})\n')   #var value
+        
+        fout.write(line + "\n")
     elif 'Invariant' in line:
         if not status['just_entered_invariant']:
             is_invariant = True
             status['just_entered_invariant'] = True
-            name = "inv_"
-            found_left = False
-            for l in line:
-                if l == '(':
-                    found_left = True
-                    continue
-                if found_left:
-                    if l == ')':
-                        break
-                    if l.isalpha():
-                        name += l
+            name = "iter_inv_" + str(status['iter_invariant_counter'])
+            status['iter_invariant_counter'] += 1
             name+="()"
-            status['invariant_name'].append(name)
-            fout.write('\t'*status['depth']+f"print('\\n{name}:::ENTER') \n")
+            
+            status['iter_invariant_stack'].append(name)
+            fout.write('\t'*status['depth']+f"print('\\n{status['iter_invariant_stack'][-1]}:::ENTER') \n")
             for var_name in status['variables']:
                 fout.write('\t'*status['depth']+f"print('{var_name}') \n")   #var name
                 fout.write('\t'*status['depth']+f'variablePrinter({var_name})\n')   #var value
@@ -88,7 +96,7 @@ def line_analyser(line, status):
             status['variables'].append(var_name)
         fout.write(line + "\n")
     else:
-        fout.write(line + " #not processed\n")
+        fout.write(line+"\n")	
 
     if not is_invariant:
         status['just_entered_invariant'] = False
@@ -109,7 +117,10 @@ status = {
     'function_depth': 0,
     'just_entered_function': False,
     'just_entered_invariant': False,
-    'invariant_name': [],
+    'loop_invariant_counter': 0,
+    'loop_invariant_stack': [],
+    'iter_invariant_counter': 0,
+    'iter_invariant_stack': [],
     'exit_counter': 1,
     'depth': 0,
     'variables': []

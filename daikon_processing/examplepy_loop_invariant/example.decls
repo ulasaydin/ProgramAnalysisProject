@@ -1,6 +1,6 @@
 decl-version 2.0
 
-ppt loop_in():::ENTER
+ppt loop_inv_0():::ENTER
   variable n
     var-kind variable
     dec-type int
@@ -17,7 +17,7 @@ ppt loop_in():::ENTER
     rep-type int
     comparability 5
 
-ppt loop_in():::EXIT1
+ppt loop_inv_0():::EXIT1
   variable n
     var-kind variable
     dec-type int
@@ -34,7 +34,7 @@ ppt loop_in():::EXIT1
     rep-type int
     comparability 5
 
-ppt iter_in():::ENTER
+ppt iter_inv_0():::ENTER
   variable n
     var-kind variable
     dec-type int
@@ -51,7 +51,7 @@ ppt iter_in():::ENTER
     rep-type int
     comparability 5
 
-ppt iter_in():::EXIT1
+ppt iter_inv_0():::EXIT1
   variable n
     var-kind variable
     dec-type int

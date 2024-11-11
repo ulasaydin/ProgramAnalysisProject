@@ -1,5 +1,5 @@
 
-loop_in():::ENTER
+loop_inv_0():::ENTER
 n
 5
 1
@@ -10,7 +10,7 @@ sum
 0
 1
 
-iter_in():::ENTER
+iter_inv_0():::ENTER
 n
 5
 1
@@ -21,7 +21,7 @@ sum
 0
 1
 
-iter_in():::EXIT1
+iter_inv_0():::EXIT1
 n
 5
 1
@@ -32,7 +32,7 @@ sum
 1
 1
 
-iter_in():::ENTER
+iter_inv_0():::ENTER
 n
 5
 1
@@ -43,7 +43,7 @@ sum
 1
 1
 
-iter_in():::EXIT1
+iter_inv_0():::EXIT1
 n
 5
 1
@@ -54,7 +54,7 @@ sum
 3
 1
 
-iter_in():::ENTER
+iter_inv_0():::ENTER
 n
 5
 1
@@ -65,7 +65,7 @@ sum
 3
 1
 
-iter_in():::EXIT1
+iter_inv_0():::EXIT1
 n
 5
 1
@@ -76,7 +76,7 @@ sum
 6
 1
 
-iter_in():::ENTER
+iter_inv_0():::ENTER
 n
 5
 1
@@ -87,7 +87,7 @@ sum
 6
 1
 
-iter_in():::EXIT1
+iter_inv_0():::EXIT1
 n
 5
 1
@@ -98,7 +98,7 @@ sum
 10
 1
 
-iter_in():::ENTER
+iter_inv_0():::ENTER
 n
 5
 1
@@ -109,7 +109,7 @@ sum
 10
 1
 
-iter_in():::EXIT1
+iter_inv_0():::EXIT1
 n
 5
 1
@@ -120,7 +120,7 @@ sum
 15
 1
 
-loop_in():::EXIT1
+loop_inv_0():::EXIT1
 n
 5
 1

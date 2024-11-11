@@ -3,10 +3,12 @@ def client(n: int) -> int:
     Ensures(Result() == n * (n + 1) / 2)
     i = 0
     sum = 0
+    # loop invariant ---> ENTER
     while i < n:
-        Invariant(i <= n) # --->ENTER
+        Invariant(i <= n) # iter invariant ---> ENTER
         Invariant(sum == i * (i + 1) / 2)
         i += 1
         sum += i
-        # -->EXIT
+        # iter invariant ---> EXIT
+    # loop invariant ---> EXIT
     Assert(i == n)
