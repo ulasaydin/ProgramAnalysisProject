@@ -49,53 +49,86 @@ def variablePrinter(var, var_name, dtrace, list_types):
 				type_comparability['index'] += 1 
 			print('comparability',type_comparability[list_types[var_name]])
 
-def client(n: int) -> int:
-	list_types = {}
-	i = 0
-	sum = 0
-	# loop invariant ---> ENTER
+from nagini_contracts.contracts import *
+from theories.TArrays import within
+
+@Pure
+def eq(a: list[int], aFrom: int, aTo: int, b: list[int], bFrom: int, bTo: int) -> bool:
+	list_types = {'a': 'int','b': 'int',}
+
+	if aTo - aFrom != bTo - bFrom:
+		return False
+	else:
+		if aFrom >= aTo:
+			return True
+		else:
+			return (a[aFrom] == b[bFrom]) and eq(a, aFrom + 1, aTo, b, bFrom + 1, bTo)
+
+def equals(a: list[int], a2: list[int]) -> bool:
+	list_types = {'a': 'int','a2': 'int',}
+
+	if a == a2:
+		return True
+
+	l = len(a)
+	if len(a2) != l:
+		return False
+
+	ic = 0
+
 	print('\nppt loop_inv_0():::ENTER') 
-	variablePrinter(n,'n',False,list_types)
-	variablePrinter(i,'i',False,list_types)
-	variablePrinter(sum,'sum',False,list_types)
+	variablePrinter(a,'a',False,list_types)
+	variablePrinter(a2,'a2',False,list_types)
+	variablePrinter(l,'l',False,list_types)
+	variablePrinter(ic,'ic',False,list_types)
 	print('\nppt loop_inv_0():::EXIT1') 
-	variablePrinter(n,'n',False,list_types)
-	variablePrinter(i,'i',False,list_types)
-	variablePrinter(sum,'sum',False,list_types)
+	variablePrinter(a,'a',False,list_types)
+	variablePrinter(a2,'a2',False,list_types)
+	variablePrinter(l,'l',False,list_types)
+	variablePrinter(ic,'ic',False,list_types)
 	print('\nloop_inv_0():::ENTER') 
-	variablePrinter(n,'n',True,list_types)
-	variablePrinter(i,'i',True,list_types)
-	variablePrinter(sum,'sum',True,list_types)
+	variablePrinter(a,'a',True,list_types)
+	variablePrinter(a2,'a2',True,list_types)
+	variablePrinter(l,'l',True,list_types)
+	variablePrinter(ic,'ic',True,list_types)
 	first_iter = True
-	while i < n:
+	while ic < l:
 		if first_iter:
 			first_iter = False
 			print('\nppt iter_inv_0():::ENTER') 
-			variablePrinter(n,'n',False,list_types)
-			variablePrinter(i,'i',False,list_types)
-			variablePrinter(sum,'sum',False,list_types)
+			variablePrinter(a,'a',False,list_types)
+			variablePrinter(a2,'a2',False,list_types)
+			variablePrinter(l,'l',False,list_types)
+			variablePrinter(ic,'ic',False,list_types)
 			print('\nppt iter_inv_0():::EXIT1') 
-			variablePrinter(n,'n',False,list_types)
-			variablePrinter(i,'i',False,list_types)
-			variablePrinter(sum,'sum',False,list_types)
+			variablePrinter(a,'a',False,list_types)
+			variablePrinter(a2,'a2',False,list_types)
+			variablePrinter(l,'l',False,list_types)
+			variablePrinter(ic,'ic',False,list_types)
 		print('\niter_inv_0():::ENTER') 
-		variablePrinter(n,'n',True,list_types)
-		variablePrinter(i,'i',True,list_types)
-		variablePrinter(sum,'sum',True,list_types)
-		i += 1
-		sum += i
-		# iter invariant ---> EXIT
+		variablePrinter(a,'a',True,list_types)
+		variablePrinter(a2,'a2',True,list_types)
+		variablePrinter(l,'l',True,list_types)
+		variablePrinter(ic,'ic',True,list_types)
+
+		if a[ic] != a2[ic]:
+			return False
+
+		ic += 1
+
 
 		print('\niter_inv_0():::EXIT1') 
-		variablePrinter(n,'n',True,list_types)
-		variablePrinter(i,'i',True,list_types)
-		variablePrinter(sum,'sum',True,list_types)
+		variablePrinter(a,'a',True,list_types)
+		variablePrinter(a2,'a2',True,list_types)
+		variablePrinter(l,'l',True,list_types)
+		variablePrinter(ic,'ic',True,list_types)
 
 	print('\nloop_inv_0():::EXIT1') 
-	variablePrinter(n,'n',True,list_types)
-	variablePrinter(i,'i',True,list_types)
-	variablePrinter(sum,'sum',True,list_types)
-	# loop invariant ---> EXIT
-client(10)
+	variablePrinter(a,'a',True,list_types)
+	variablePrinter(a2,'a2',True,list_types)
+	variablePrinter(l,'l',True,list_types)
+	variablePrinter(ic,'ic',True,list_types)
+	return True
 
+equals([1,2,3],[1,2,4])
 print("\n\n# EOF (added by Runtime.addShutdownHook)\n")

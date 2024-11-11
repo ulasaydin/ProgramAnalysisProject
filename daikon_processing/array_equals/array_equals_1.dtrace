@@ -1,0 +1,261 @@
+decl-version 2.0
+
+ppt loop_inv_0():::ENTER
+variable a
+var-kind variable
+dec-type []
+rep-type hashcode
+comparability 1
+variable a[..]
+var-kind array
+enclosing-var a
+dec-type int
+rep-type hashcode[]
+comparability 2
+variable a2
+var-kind variable
+dec-type []
+rep-type hashcode
+comparability 1
+variable a2[..]
+var-kind array
+enclosing-var a2
+dec-type int
+rep-type hashcode[]
+comparability 2
+variable l
+var-kind variable
+dec-type int
+rep-type int
+comparability 2
+variable ic
+var-kind variable
+dec-type int
+rep-type int
+comparability 2
+
+ppt loop_inv_0():::EXIT1
+variable a
+var-kind variable
+dec-type []
+rep-type hashcode
+comparability 1
+variable a[..]
+var-kind array
+enclosing-var a
+dec-type int
+rep-type hashcode[]
+comparability 2
+variable a2
+var-kind variable
+dec-type []
+rep-type hashcode
+comparability 1
+variable a2[..]
+var-kind array
+enclosing-var a2
+dec-type int
+rep-type hashcode[]
+comparability 2
+variable l
+var-kind variable
+dec-type int
+rep-type int
+comparability 2
+variable ic
+var-kind variable
+dec-type int
+rep-type int
+comparability 2
+
+loop_inv_0():::ENTER
+a
+1000
+1
+a[..]
+[1 2 3]
+1
+a2
+1001
+1
+a2[..]
+[1 2 4]
+1
+l
+3
+1
+ic
+0
+1
+
+ppt iter_inv_0():::ENTER
+variable a
+var-kind variable
+dec-type []
+rep-type hashcode
+comparability 1
+variable a[..]
+var-kind array
+enclosing-var a
+dec-type int
+rep-type hashcode[]
+comparability 2
+variable a2
+var-kind variable
+dec-type []
+rep-type hashcode
+comparability 1
+variable a2[..]
+var-kind array
+enclosing-var a2
+dec-type int
+rep-type hashcode[]
+comparability 2
+variable l
+var-kind variable
+dec-type int
+rep-type int
+comparability 2
+variable ic
+var-kind variable
+dec-type int
+rep-type int
+comparability 2
+
+ppt iter_inv_0():::EXIT1
+variable a
+var-kind variable
+dec-type []
+rep-type hashcode
+comparability 1
+variable a[..]
+var-kind array
+enclosing-var a
+dec-type int
+rep-type hashcode[]
+comparability 2
+variable a2
+var-kind variable
+dec-type []
+rep-type hashcode
+comparability 1
+variable a2[..]
+var-kind array
+enclosing-var a2
+dec-type int
+rep-type hashcode[]
+comparability 2
+variable l
+var-kind variable
+dec-type int
+rep-type int
+comparability 2
+variable ic
+var-kind variable
+dec-type int
+rep-type int
+comparability 2
+
+iter_inv_0():::ENTER
+a
+1000
+1
+a[..]
+[1 2 3]
+1
+a2
+1001
+1
+a2[..]
+[1 2 4]
+1
+l
+3
+1
+ic
+0
+1
+
+iter_inv_0():::EXIT1
+a
+1000
+1
+a[..]
+[1 2 3]
+1
+a2
+1001
+1
+a2[..]
+[1 2 4]
+1
+l
+3
+1
+ic
+1
+1
+
+iter_inv_0():::ENTER
+a
+1000
+1
+a[..]
+[1 2 3]
+1
+a2
+1001
+1
+a2[..]
+[1 2 4]
+1
+l
+3
+1
+ic
+1
+1
+
+iter_inv_0():::EXIT1
+a
+1000
+1
+a[..]
+[1 2 3]
+1
+a2
+1001
+1
+a2[..]
+[1 2 4]
+1
+l
+3
+1
+ic
+2
+1
+
+iter_inv_0():::ENTER
+a
+1000
+1
+a[..]
+[1 2 3]
+1
+a2
+1001
+1
+a2[..]
+[1 2 4]
+1
+l
+3
+1
+ic
+2
+1
+
+
+# EOF (added by Runtime.addShutdownHook)
+
