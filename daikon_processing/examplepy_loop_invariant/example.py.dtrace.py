@@ -15,8 +15,15 @@ def variablePrinter(var_name):
 def client(n: int) -> int:
 	i = 0
 	sum = 0
+	print('\nloop_in():::ENTER') 
+	print('n') 
+	variablePrinter(n)
+	print('i') 
+	variablePrinter(i)
+	print('sum') 
+	variablePrinter(sum)
 	while i < n: #not processed
-		print('\ninv_in():::ENTER') 
+		print('\niter_in():::ENTER') 
 		print('n') 
 		variablePrinter(n)
 		print('i') 
@@ -27,14 +34,20 @@ def client(n: int) -> int:
 		sum += i
 		# -->EXIT #not processed
 
-		print('\ninv_in():::EXIT1') 
+		print('\niter_in():::EXIT1') 
 		print('n') 
 		variablePrinter(n)
 		print('i') 
 		variablePrinter(i)
 		print('sum') 
 		variablePrinter(sum)
+	print('\nloop_in():::EXIT1') 
+	print('n') 
+	variablePrinter(n)
+	print('i') 
+	variablePrinter(i)
+	print('sum') 
+	variablePrinter(sum)
 
 client(5)
-
 print("\n\n# EOF (added by Runtime.addShutdownHook)\n")

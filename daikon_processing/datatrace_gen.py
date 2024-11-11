@@ -28,7 +28,7 @@ def functionVariableReader(var_string, status):
 def line_analyser(line, status):
     i = 0
     line = line.replace('    ','\t')
-    while line[i]=='\t':
+    while i<len(line) and line[i]=='\t':
         i+=1
 
     if status['depth'] > i and status['invariant_name']:
@@ -82,7 +82,7 @@ def line_analyser(line, status):
                 fout.write('\t'*status['depth']+f'variablePrinter({var_name})\n')   #var value
         else:
             return
-    elif '=' in line:
+    elif 'if'not in line and '=' in line:
         var_name = line.split('=')[0].strip().rstrip('+/-*%^& ')
         if var_name not in status['variables']:
             status['variables'].append(var_name)
