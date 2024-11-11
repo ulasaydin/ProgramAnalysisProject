@@ -1,7 +1,30 @@
-# ProgramAnalysisProject
-Course project for Group 8 in 02242 Program Analysis at DTU
+# Instrumenter
 
-## Instrumenter
+## How to use it 
+
+### datatrace_gen.py
+    
+    python datatrace_gen.py filename.py
+
+This will generate filename.py.dtrace.py, this is the instrumented code.
+
+The program does not add any call to the main function of the input file, this may be handled by Pynguin.
+
+    python filename.py.dtrace.py > filename.dtrace
+
+This will create the dtrace that has to be analysed by Daikon, if you are on windows the file may be encoded in UTF-16, re-encode it in UTF-8.
+
+### declsgen.py
+
+### Run Daikon
+
+Download Daikon [here](https://plse.cs.washington.edu/daikon/download/).
+
+Run it by:
+
+    java -cp  daikon.jar daikon.Daikon filename.decls filename.dtrace
+
+## Daikon documentation for further development
 
 ### Declare variables
 [From](https://plse.cs.washington.edu/daikon/download/doc/developer/File-formats.html#Variable-declarations)

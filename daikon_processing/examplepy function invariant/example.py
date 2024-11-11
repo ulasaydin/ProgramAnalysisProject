@@ -1,4 +1,4 @@
-def client(n: int) -> int:
+def client(n: int) -> int: # --->ENTER
     Requires(n >= 0)
     Ensures(Result() == n * (n + 1) / 2)
     i = 0
@@ -9,3 +9,4 @@ def client(n: int) -> int:
         i += 1
         sum += i
     Assert(i == n)
+    # -->EXIT

@@ -13,22 +13,28 @@ def variablePrinter(var_name):
 		print('['+' '.join(var_name+']'))
 	print('1') #modified
 def client(n: int) -> int:
-	print('client:::ENTER') 
-	print('n') 
-	variablePrinter(n)
 	i = 0
-	print('i') 
-	variablePrinter(i)
 	sum = 0
-	print('sum') 
-	variablePrinter(sum)
-	while i < n:
+	while i < n: #not processed
+		print('\ninv_in():::ENTER') 
+		print('n') 
+		variablePrinter(n)
+		print('i') 
+		variablePrinter(i)
+		print('sum') 
+		variablePrinter(sum)
 		i += 1
-		print('i ') 
-		variablePrinter(i )
 		sum += i
-		print('sum ') 
-		variablePrinter(sum )
-	print('client:::EXIT') 
+		# -->EXIT #not processed
+
+		print('\ninv_in():::EXIT1') 
+		print('n') 
+		variablePrinter(n)
+		print('i') 
+		variablePrinter(i)
+		print('sum') 
+		variablePrinter(sum)
 
 client(5)
+
+print("\n\n# EOF (added by Runtime.addShutdownHook)\n")
