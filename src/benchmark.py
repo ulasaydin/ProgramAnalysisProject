@@ -18,4 +18,4 @@ for program_file_path, entry_point_method in TEST_CASES:
     output_dir = os.path.join(benchmark_dir, output_dir_name)
     os.makedirs(output_dir)
 
-    find_invariants(program_file_path, entry_point_method, output_dir)
+    find_invariants(os.path.join(__file__, program_file_path), entry_point_method, output_dir)

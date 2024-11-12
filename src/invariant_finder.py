@@ -91,7 +91,7 @@ def find_invariants(program_file_path: str, entry_point_method: str, output_dir:
 
     main_function_bytecode = get_function_bytecode(main_function_without_annotations)
 
-    test_cases = Fuzzer(main_function_bytecode, main_function_preconditions).generate_test_cases()
+    test_cases = Fuzzer(main_function_without_annotations, main_function_bytecode, main_function_preconditions).generate_test_cases()
 
     # TODO: Run instrumenter on program to get instrumented program
     # TODO: Output instrumented program to output directory

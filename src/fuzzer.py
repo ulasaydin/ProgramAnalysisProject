@@ -5,6 +5,7 @@ import ast
 
 @dataclass
 class Fuzzer:
+    function: ast.FunctionDef
     bytecode: dis.Bytecode
     preconditions: list[ast.Expr]
 
