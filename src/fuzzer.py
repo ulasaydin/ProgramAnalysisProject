@@ -10,4 +10,7 @@ class Fuzzer:
     preconditions: list[ast.Expr]
 
     def generate_test_cases(self) -> list[list]:
-        pass
+        print(ast.unparse(self.function))
+        print(self.bytecode.dis())
+        #for instruction in self.bytecode:
+        #    print(instruction)
