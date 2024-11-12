@@ -3,3 +3,4 @@ tree-sitter-python
 typed-ast==1.4.1
 mypy==0.902
 nagini
+platformdirs
