@@ -1,8 +1,11 @@
 from datetime import datetime
 import os
+from platformdirs import user_data_dir
+import sys
+sys.path.append(os.path.dirname(__file__))
+
 from config import APP_AUTHOR, APP_NAME, TEST_CASES
 from invariant_finder import find_invariants
-from platformdirs import user_data_dir
 
 user_data_directory = user_data_dir(APP_NAME, APP_AUTHOR)
 

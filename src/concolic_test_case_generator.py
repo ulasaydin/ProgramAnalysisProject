@@ -6,7 +6,7 @@ from interpreter import Interpreter
 
 
 @dataclass
-class TestCaseGenerator:
+class ConcolicTestCaseGenerator:
     env: dict[str, dis.Bytecode]
     entry_point: str
 

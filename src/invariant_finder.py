@@ -3,8 +3,12 @@ import dis
 from datetime import datetime
 import ast
 import os
+import sys
+
+sys.path.append(os.path.dirname(__file__))
+
 from util import write_to_file, extract_functions, get_function_bytecode
-from test_case_generator import TestCaseGenerator
+from concolic_test_case_generator import ConcolicTestCaseGenerator
 from platformdirs import user_data_dir
 from config import APP_AUTHOR, APP_NAME
 from util import remove_nagini_annotations
@@ -33,7 +37,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         write_to_file(os.path.join(output_dir, f"{function_name}_ast.txt"), ast.dump(function_ast, indent=4))
         write_to_file(os.path.join(output_dir, f"{function_name}_bytecode.txt"), function_bytecode.dis())
 
-    test_cases = TestCaseGenerator(
+    test_cases = ConcolicTestCaseGenerator(
         env = { function_name : function_bytecode for function_name, (_, function_bytecode) in functions.items() },
         entry_point=entry_point_function
     ).generate_test_cases()
