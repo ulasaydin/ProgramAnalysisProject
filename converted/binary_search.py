@@ -1,46 +1,12 @@
 from nagini_contracts.contracts import *
 from theories.TArrays import sorted, within, TArraysIn, less, grt
 
-"""
-/*@
-      @ requires a != null;
-      @ requires TArrays.within(a,fromIndex,toIndex);
-      @ requires TArrays.sorted(a,fromIndex,toIndex);
-      @
-      @ ensures \result >= 0 ==> a[\result] == key;
-      @ ensures \result < 0 ==> (!TArrays.in(a,fromIndex,toIndex,key));
-      @*/
-    private static/*@ pure @*/int binarySearch0(int[] a, int fromIndex,
-                                                int toIndex, int key) {
 
-        int low = fromIndex;
-        int high = toIndex - 1;
-
-        //@ loop_invariant 0 <= fromIndex && fromIndex <= toIndex && toIndex<=a.length;
-        //@ loop_invariant high >= -1;
-        //@ loop_invariant fromIndex <= low;
-        //@ loop_invariant low <= high +1;
-        //@ loop_invariant high < toIndex;
-        //@ loop_invariant TArrays.sorted(a, fromIndex, toIndex);
-        //@ loop_invariant TArrays.less(a, fromIndex, low, key);
-        //@ loop_invariant TArrays.grt(a, high + 1, toIndex, key);
-        while (low <= high) {
-            int mid = low + ((high - low) / 2); // equivalent to (low + high) >>> 1;
-            int midVal = a[mid];
-
-            if (midVal < key) {
-                low = mid + 1;
-            } else if (midVal > key) {
-                high = mid - 1;
-            } else {
-                return mid; // key found
-            }
-        }
-        return -(low + 1); // key not found.
-
-    }
-"""
-
+def check_preconditions(a: list[int], fromIndex: int, toIndex: int, key: int) -> None:
+    if not within(a, fromIndex, toIndex):
+        raise RuntimeError("Precondition failed: within(a, fromIndex, toIndex)")
+    if not sorted(a, fromIndex, toIndex):
+        raise RuntimeError("Precondition failed: sorted(a, fromIndex, toIndex)")
 
 def binary_search(a: list[int], fromIndex: int, toIndex: int, key: int) -> int:
     Requires(Acc(list_pred(a)))
@@ -51,6 +17,8 @@ def binary_search(a: list[int], fromIndex: int, toIndex: int, key: int) -> int:
     Ensures(Result() < len(a))
     Ensures(Implies(Result() >= 0, a[Result()] == key))
     Ensures(Implies(Result() < 0, not TArraysIn(a, fromIndex, toIndex, key)))
+
+    check_preconditions(a, fromIndex, toIndex, key)
 
     low = fromIndex
     high = toIndex - 1

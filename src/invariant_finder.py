@@ -1,18 +1,17 @@
-from datetime import datetime
+import argparse
 import dis
-import importlib
-import importlib.util
-import sys
+from datetime import datetime
 import ast
-import types
 import os
-from fuzzer import Fuzzer
+from util import write_to_file, extract_functions, get_function_bytecode
+from test_case_generator import TestCaseGenerator
 from platformdirs import user_data_dir
 from config import APP_AUTHOR, APP_NAME
-from util import extract_functions, get_method_preconditions, remove_nagini_annotations, get_function_bytecode
+from util import remove_nagini_annotations
 
-def find_invariants(program_file_path: str, entry_point_method: str, output_dir: str):
-    print(f"Finding invariants for {entry_point_method} in {program_file_path}:")
+
+def find_invariants(program_file_path: str, entry_point_function: str, output_dir: str):
+    print(f"Finding invariants for {entry_point_function} in {program_file_path}:")
     print(f"Writing results to {output_dir}")
 
     program_file_path = os.path.abspath(program_file_path)
@@ -20,20 +19,29 @@ def find_invariants(program_file_path: str, entry_point_method: str, output_dir:
     with open(program_file_path) as program_file:
         program_root = ast.parse(program_file.read(), program_file_path)
 
-    functions = extract_functions(program_root, program_file_path)
+    functions: dict[str, (ast.FunctionDef, dis.Bytecode)] = {}
 
-    if entry_point_method not in functions:
-        raise RuntimeError(f"Entry point method {entry_point_method} not found in program")
-    main_function = functions[entry_point_method]
+    for function_name, function_ast in extract_functions(program_root, program_file_path).items():
+        function_without_annotations = remove_nagini_annotations(function_ast)
+        functions[function_name] = (function_without_annotations, get_function_bytecode(function_without_annotations))
 
-    main_function_preconditions = get_method_preconditions(main_function)
+    if entry_point_function not in functions:
+        raise RuntimeError(f"Entry point method {entry_point_function} not found in program")
 
-    main_function_without_annotations = remove_nagini_annotations(main_function)
+    for function_name, (function_ast, function_bytecode) in functions.items():
+        write_to_file(os.path.join(output_dir, f"{function_name}_without_annotations.py"), ast.unparse(function_ast))
+        write_to_file(os.path.join(output_dir, f"{function_name}_ast.txt"), ast.dump(function_ast, indent=4))
+        write_to_file(os.path.join(output_dir, f"{function_name}_bytecode.txt"), function_bytecode.dis())
 
-    main_function_bytecode = get_function_bytecode(main_function_without_annotations)
+    test_cases = TestCaseGenerator(
+        env = { function_name : function_bytecode for function_name, (_, function_bytecode) in functions.items() },
+        entry_point=entry_point_function
+    ).generate_test_cases()
 
-    test_cases = Fuzzer(main_function_without_annotations, main_function_bytecode, main_function_preconditions).generate_test_cases()
+    # TODO: Translate more programs (maybe)
 
+    # TODO: Implement interpreter
+    # TODO: Implement concolic execution for test case generation
     # TODO: Run instrumenter on program to get instrumented program
     # TODO: Output instrumented program to output directory
     # TODO: Run instrumented program on test cases
@@ -48,13 +56,17 @@ def find_invariants(program_file_path: str, entry_point_method: str, output_dir:
 
 
 if __name__ == '__main__':
-    program_file_path = sys.argv[1]
-    main_method_name = sys.argv[2]
+    parser = argparse.ArgumentParser(prog="Loop Invariant Finder")
+    parser.add_argument("program_file_path", help="Program file path")
+    parser.add_argument("entry_point_function", help="Entry point function name")
+    args = parser.parse_args()
+
+    program_file_path = args.program_file_path
+    entry_point_function_name = args.entry_point_function
 
     user_data_directory = user_data_dir(APP_NAME, APP_AUTHOR)
 
-    output_dir_name = f"Invariants-{os.path.basename(program_file_path)}-{main_method_name}-{datetime.now().strftime(f'%Y-%m-%d_%H-%M-%S')}"
+    output_dir_name = f"Invariants-{os.path.basename(program_file_path)}-{entry_point_function_name}-{datetime.now().strftime(f'%Y-%m-%d_%H-%M-%S')}"
     output_dir = os.path.join(user_data_directory, output_dir_name)
-    os.makedirs(output_dir)
 
-    find_invariants(program_file_path, main_method_name, output_dir)
+    find_invariants(program_file_path, entry_point_function_name, output_dir)

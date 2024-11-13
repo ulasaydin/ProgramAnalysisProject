@@ -1,12 +1,14 @@
 import ast
 import dis
 import importlib
+import importlib.util
 import sys
 import types
 import os
+from typing import Union
 
 
-def extract_functions(program_root: ast.Module, program_file_path: str) -> tuple[ast.FunctionDef, dict[str, ast.FunctionDef]]:
+def extract_functions(program_root: ast.Module, program_file_path: str) -> dict[str, ast.FunctionDef]:
     functions : dict[str, ast.FunctionDef] = dict()
 
     for node in ast.iter_child_nodes(program_root):
@@ -33,13 +35,13 @@ def extract_functions(program_root: ast.Module, program_file_path: str) -> tuple
     return functions
 
 def get_function_bytecode(function: ast.FunctionDef) -> dis.Bytecode:
-    compiled_function = compile(ast.unparse(function), '<string>', 'exec')
+    compiled_function = compile(ast.unparse(function), '<string>', 'exec', optimize=0)
     for co_const in compiled_function.co_consts:
         if isinstance(co_const, types.CodeType):
             bytecodes = co_const
     return dis.Bytecode(types.FunctionType(bytecodes, globals(), function.name).__code__)
 
-def remove_nagini_annotations(function: ast.FunctionDef) -> ast.FunctionDef:
+def remove_nagini_annotations(function: Union[ast.Module, ast.FunctionDef]) -> Union[ast.Module, ast.FunctionDef]:
     class NaginiAnnotationRemover(ast.NodeTransformer):
         def visit_Expr(self, node: ast.Expr):
             if isinstance(node.value, ast.Call) and node.value.func.id in ["Requires", "Ensures", "Invariant", "Assert"]:
@@ -64,3 +66,8 @@ def get_method_preconditions(function: ast.FunctionDef) -> list[ast.Expr]:
     extractor = PreconditionExtractor()
     extractor.visit(function)
     return extractor.preconditions
+
+def write_to_file(path: str, text: str):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as file:
+        file.write(text)

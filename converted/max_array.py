@@ -1,10 +1,17 @@
 from nagini_contracts.contracts import *
 
+
+def check_preconditions(xs: list[int]) -> None:
+    if len(xs) == 0:
+        raise RuntimeError("Precondition failed: len(xs) > 0")
+
 def max_list(xs: list[int]) -> int:
     Requires(Acc(list_pred(xs)))
     Requires(len(xs) > 0)
     Ensures(Acc(list_pred(xs)))
     Ensures(Forall(int, lambda i: Implies(0 <= i and i < len(xs), Result() >= xs[i])))
+
+    check_preconditions(xs)
 
     maximum = xs[0]
     
