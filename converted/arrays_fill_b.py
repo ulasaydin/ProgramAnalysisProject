@@ -1,6 +1,6 @@
 from nagini_contracts.contracts import *
 
-from theories.TArrays import *
+from theories.TArrays import within, eq
 
 
 def check_preconditions(a: list[int], from_index: int, to_index: int, val: int) -> None:

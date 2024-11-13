@@ -23,11 +23,12 @@ def extract_functions(program_root: ast.Module, program_file_path: str) -> dict[
             if (spec := importlib.util.find_spec(node.module)) is not None:
                 with open(spec.origin) as module_file:
                     imported_module_root = ast.parse(module_file.read(), spec.origin)
-                imported_names = map(lambda alias: alias.name, node.names)
+                imported_names = list(map(lambda alias: alias.name, node.names))
                 for imported_module_node in ast.iter_child_nodes(imported_module_root):
-                    if isinstance(imported_module_node, ast.FunctionDef) and imported_module_node.name in imported_names:
-                        imported_module_node.module = spec.origin
-                        functions[imported_module_node.name] = imported_module_node
+                    if isinstance(imported_module_node, ast.FunctionDef):
+                        if imported_module_node.name in imported_names or '*' in imported_names:
+                            imported_module_node.module = spec.origin
+                            functions[imported_module_node.name] = imported_module_node
     
     for function_name, function_node in functions.items():
         print(f"Extracted function {function_name} from module {function_node.module}")
