@@ -10,7 +10,8 @@ from fuzzer import Fuzzer
 from platformdirs import user_data_dir
 from config import APP_AUTHOR, APP_NAME
 from instrumenter import Instrumenter
-
+from contextlib import contextmanager
+import subprocess
 
 def extract_functions(program_root: ast.Module, program_file_path: str) -> tuple[ast.FunctionDef, dict[str, ast.FunctionDef]]:
     functions : dict[str, ast.FunctionDef] = dict()
@@ -71,6 +72,7 @@ def get_method_preconditions(function: ast.FunctionDef) -> list[ast.Expr]:
     extractor.visit(function)
     return extractor.preconditions
 
+@contextmanager
 def find_invariants(program_file_path: str, entry_point_method: str, output_dir: str):
     print(f"Finding invariants for {entry_point_method} in {program_file_path}:")
     print(f"Writing results to {output_dir}")
@@ -98,19 +100,35 @@ def find_invariants(program_file_path: str, entry_point_method: str, output_dir:
     instrumented_dir = os.path.join(os.getcwd(), "instrumented")
     os.makedirs(instrumented_dir, exist_ok=True)
     instrumented_program = os.path.join(instrumented_dir,os.path.basename(program_file_path))
-    #Instrumenter().instrument_file(program_file_path, instrumented_program)
+    Instrumenter().instrument_file(program_file_path, instrumented_program)
 
-    # TODO: Output instrumented program to output directory
+    # Output instrumented program to output directory
     print(f"Importing instrumented.{entry_point_method}")
     spec = importlib.util.spec_from_file_location("instrumented."+entry_point_method, instrumented_program)
     instrumented_fun = importlib.util.module_from_spec(spec)
     sys.modules["instrumented."+entry_point_method] = instrumented_fun
-    spec.loader.exec_module(instrumented_fun)
-    instrumented_fun.sum_list(test_cases)
     
     # TODO: Run instrumented program on test cases
     # TODO: Output data traces to output directory
-    # TODO: Run Daikon on data traces to get invariants
+    daikon_input = os.path.join(instrumented_dir, os.path.basename(program_file_path)+".dtrace")
+    #with open(daikon_input, 'w', encoding='utf-8') as to:
+    fd = sys.stdout.fileno()
+    with os.fdopen(os.dup(fd), 'w') as old_stdout:
+        with open(daikon_input, 'w', encoding='utf-8') as file:
+            sys.stdout.close() # + implicit flush()
+            os.dup2(file.fileno(), fd) # fd writes to 'to' file
+            sys.stdout = os.fdopen(fd, 'w') # Python writes to fd
+        try:
+            spec.loader.exec_module(instrumented_fun)
+            method = getattr(instrumented_fun, entry_point_method)
+            method(test_cases)
+        finally:
+            sys.stdout.close() # + implicit flush()
+            os.dup2(old_stdout.fileno(), fd) # fd writes to 'to' file
+            sys.stdout = os.fdopen(fd, 'w') # Python writes to fd
+        
+    # Run Daikon on data traces to get invariants
+    daikon_result = subprocess.run(["java","-cp","daikon.jar","daikon.Daikon",daikon_input], capture_output=True)
     # TODO: Parse Daikon output and translate invariants to Nagini syntax
     # TODO: Insert invariant annotations in program ast
     # TODO: Output program with invariants to output directory
