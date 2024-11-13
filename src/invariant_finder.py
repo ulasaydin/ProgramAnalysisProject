@@ -9,6 +9,7 @@ import os
 from fuzzer import Fuzzer
 from platformdirs import user_data_dir
 from config import APP_AUTHOR, APP_NAME
+from instrumenter import Instrumenter
 
 
 def extract_functions(program_root: ast.Module, program_file_path: str) -> tuple[ast.FunctionDef, dict[str, ast.FunctionDef]]:
@@ -93,8 +94,20 @@ def find_invariants(program_file_path: str, entry_point_method: str, output_dir:
 
     test_cases = Fuzzer(main_function_bytecode, main_function_preconditions).generate_test_cases()
 
-    # TODO: Run instrumenter on program to get instrumented program
+    # Run instrumenter on program to get instrumented program
+    instrumented_dir = os.path.join(os.getcwd(), "instrumented")
+    os.makedirs(instrumented_dir, exist_ok=True)
+    instrumented_program = os.path.join(instrumented_dir,os.path.basename(program_file_path))
+    #Instrumenter().instrument_file(program_file_path, instrumented_program)
+
     # TODO: Output instrumented program to output directory
+    print(f"Importing instrumented.{entry_point_method}")
+    spec = importlib.util.spec_from_file_location("instrumented."+entry_point_method, instrumented_program)
+    instrumented_fun = importlib.util.module_from_spec(spec)
+    sys.modules["instrumented."+entry_point_method] = instrumented_fun
+    spec.loader.exec_module(instrumented_fun)
+    instrumented_fun.sum_list(test_cases)
+    
     # TODO: Run instrumented program on test cases
     # TODO: Output data traces to output directory
     # TODO: Run Daikon on data traces to get invariants
