@@ -1,7 +1,5 @@
 from nagini_contracts.contracts import *
 
-from converted.sum_one_to_n import check_preconditions
-
 
 def check_preconditions(xs: list[int]) -> None:
     if len(xs) == 0:
