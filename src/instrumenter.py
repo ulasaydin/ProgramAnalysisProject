@@ -58,21 +58,7 @@ def variablePrinter(var, var_name, dtrace, list_types):
     fin = None
     fout = None
 
-    status = {
-        'fun_name': [],
-        'function_depth': 0,
-        'list_types': "",
-        'just_entered_function': False,
-        'just_entered_invariant': False,
-        'loop_invariant_counter': 0,
-        'loop_invariant_stack': [],
-        'iter_invariant_counter': 0,
-        'iter_invariant_stack': [],
-        'loop_depth': 0,
-        'exit_counter': 1,
-        'depth': 0,
-        'variables': []
-    }
+
 
 
     def functionVariableReader(self, var_string):
@@ -179,7 +165,7 @@ def variablePrinter(var, var_name, dtrace, list_types):
                 return
         elif 'if'not in line and '=' in line:
             var_name = line.split('=')[0].strip().rstrip('+/-*%^& ')
-            if var_name not in self.status['variables']:
+            if var_name not in self.status['variables'] and not self.status['iter_invariant_stack']:
                 self.status['variables'].append(var_name)
             self.fout.write(line + "\n")
         else:
@@ -194,6 +180,21 @@ def variablePrinter(var, var_name, dtrace, list_types):
         self.fin = open(filename_in, "r")
         self.fout = open(filename_out, "w")
         self.fout.write(self.var_print_fun)
+        self.status = {
+            'fun_name': [],
+            'function_depth': 0,
+            'list_types': "",
+            'just_entered_function': False,
+            'just_entered_invariant': False,
+            'loop_invariant_counter': 0,
+            'loop_invariant_stack': [],
+            'iter_invariant_counter': 0,
+            'iter_invariant_stack': [],
+            'loop_depth': 0,
+            'exit_counter': 1,
+            'depth': 0,
+            'variables': []
+        }
         for line in self.fin.readlines():
             self.line_analyser(line.rstrip())
 
