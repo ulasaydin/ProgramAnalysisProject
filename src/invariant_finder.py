@@ -66,10 +66,10 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     instrumented_dir = os.path.join(output_dir, "instrumented")
     os.makedirs(instrumented_dir, exist_ok=True)
     instrumented_program = os.path.join(instrumented_dir,os.path.basename(program_file_path))
+    print(f"Instrumenting {os.path.basename(program_file_path)}")
     Instrumenter().instrument_file(program_file_path, instrumented_program)
 
     # Output instrumented program to output directory
-    print(f"Importing instrumented.{entry_point_function}")
     spec = importlib.util.spec_from_file_location("instrumented."+entry_point_function, instrumented_program)
     instrumented_fun = importlib.util.module_from_spec(spec)
     sys.modules["instrumented."+entry_point_function] = instrumented_fun
@@ -79,6 +79,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     dtrace_base_path = os.path.join(instrumented_dir, os.path.basename(program_file_path))
     dtraces = []
     fd = sys.stdout.fileno()
+    print(f"Importing instrumented.{entry_point_function}")
     with os.fdopen(os.dup(fd), 'w') as old_stdout:
         for i, test_case in enumerate(test_cases):
             dtraces.append(dtrace_base_path+'_'+str(i)+".dtrace")
@@ -96,6 +97,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
                 sys.stdout = os.fdopen(fd, 'w') # Python writes to fd
         
     # Run Daikon on data traces to get invariants
+    print(f"Running Daikon over {len(test_case)} test cases.")
     daikon_result = subprocess.run(["java","-cp","daikon.jar","daikon.Daikon","-o",dtrace_base_path, *dtraces], capture_output=True)
     # TODO: Parse Daikon output and translate invariants to Nagini syntax
     # TODO: Insert invariant annotations in program ast
@@ -103,6 +105,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     # TODO: Run Nagini on the annotated program to check invariants
     #       if it fails, remove the invariant and run again
     #       if it passes, we have found the proved invariants
+    print("---")
 
 
 if __name__ == '__main__':
