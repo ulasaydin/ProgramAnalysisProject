@@ -12,5 +12,6 @@ class ConcolicTestCaseGenerator:
 
     def generate_test_cases(self) -> list[list]:
         vm = Interpreter(env=self.env, entry_point=self.entry_point)
+        return []
         #vm.run()
         # TODO: Implement concolic execution for test case generation with the interpreter

@@ -1,14 +1,14 @@
 import dis
 import math
-from attr import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
 class Interpreter:
     env: dict[str, dis.Bytecode]
     entry_point: str
-    heap: dict = {}
-    stack: list = []
+    heap: dict = field(default_factory=dict)
+    stack: list = field(default_factory=list)
     pc: int = 0
     done: bool = False
 
