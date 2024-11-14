@@ -1,5 +1,8 @@
 import argparse
 import dis
+import importlib.util
+from contextlib import contextmanager
+import subprocess
 from datetime import datetime
 import ast
 import os
@@ -12,6 +15,7 @@ from concolic_test_case_generator import ConcolicTestCaseGenerator
 from platformdirs import user_data_dir
 from config import APP_AUTHOR, APP_NAME
 from util import remove_nagini_annotations
+from instrumenter import Instrumenter
 
 
 def find_invariants(program_file_path: str, entry_point_function: str, output_dir: str):
@@ -43,14 +47,44 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     ).generate_test_cases()
 
     # TODO: Translate more programs (maybe)
-
     # TODO: Implement interpreter
     # TODO: Implement concolic execution for test case generation
     # TODO: Run instrumenter on program to get instrumented program
     # TODO: Output instrumented program to output directory
-    # TODO: Run instrumented program on test cases
-    # TODO: Output data traces to output directory
-    # TODO: Run Daikon on data traces to get invariants
+
+    # Run instrumenter on program to get instrumented program
+    instrumented_dir = os.path.join(output_dir, "instrumented")
+    os.makedirs(instrumented_dir, exist_ok=True)
+    instrumented_program = os.path.join(instrumented_dir,os.path.basename(program_file_path))
+    Instrumenter().instrument_file(program_file_path, instrumented_program)
+
+    # Output instrumented program to output directory
+    print(f"Importing instrumented.{entry_point_function}")
+    spec = importlib.util.spec_from_file_location("instrumented."+entry_point_function, instrumented_program)
+    instrumented_fun = importlib.util.module_from_spec(spec)
+    sys.modules["instrumented."+entry_point_function] = instrumented_fun
+
+    # Run instrumented program on test cases
+    # Output data traces to output directory
+    daikon_input = os.path.join(instrumented_dir, os.path.basename(program_file_path)+".dtrace")
+    #with open(daikon_input, 'w', encoding='utf-8') as to:
+    fd = sys.stdout.fileno()
+    with os.fdopen(os.dup(fd), 'w') as old_stdout:
+        with open(daikon_input, 'w', encoding='utf-8') as file:
+            sys.stdout.close() # + implicit flush()
+            os.dup2(file.fileno(), fd) # fd writes to 'to' file
+            sys.stdout = os.fdopen(fd, 'w') # Python writes to fd
+        try:
+            spec.loader.exec_module(instrumented_fun)
+            method = getattr(instrumented_fun, entry_point_function)
+            method(test_cases)
+        finally:
+            sys.stdout.close() # + implicit flush()
+            os.dup2(old_stdout.fileno(), fd) # fd writes to 'to' file
+            sys.stdout = os.fdopen(fd, 'w') # Python writes to fd
+        
+    # Run Daikon on data traces to get invariants
+    daikon_result = subprocess.run(["java","-cp","daikon.jar","daikon.Daikon",daikon_input], capture_output=True)
     # TODO: Parse Daikon output and translate invariants to Nagini syntax
     # TODO: Insert invariant annotations in program ast
     # TODO: Output program with invariants to output directory

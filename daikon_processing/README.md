@@ -2,9 +2,9 @@
 
 ## How to use it 
 
-### datatrace_gen.py
+### instrumenter.py
     
-    python datatrace_gen.py filename.py
+    python instrumenter.py filename.py
 
 This will generate filename.py.dtrace.py, this is the instrumented code.
 
