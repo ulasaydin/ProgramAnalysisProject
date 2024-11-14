@@ -35,12 +35,14 @@ def extract_functions(program_root: ast.Module, program_file_path: str) -> dict[
 
     return functions
 
-def get_function_bytecode(function: ast.FunctionDef) -> dis.Bytecode:
-    compiled_function = compile(ast.unparse(function), '<string>', 'exec', optimize=0)
+def function_ast_to_bytecode(function: ast.FunctionDef) -> dis.Bytecode:
+    return function_source_to_bytecode(ast.unparse(function))
+
+def function_source_to_bytecode(function: str) -> dis.Bytecode:
+    compiled_function = compile(function, '<string>', 'exec', optimize=0)
     for co_const in compiled_function.co_consts:
         if isinstance(co_const, types.CodeType):
-            bytecodes = co_const
-    return dis.Bytecode(types.FunctionType(bytecodes, globals(), function.name).__code__)
+            return dis.Bytecode(types.FunctionType(co_const, globals(), compiled_function.co_name).__code__)
 
 def remove_nagini_annotations(function: Union[ast.Module, ast.FunctionDef]) -> Union[ast.Module, ast.FunctionDef]:
     class NaginiAnnotationRemover(ast.NodeTransformer):

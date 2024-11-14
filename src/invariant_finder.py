@@ -10,7 +10,7 @@ import sys
 
 sys.path.append(os.path.dirname(__file__))
 
-from util import write_to_file, extract_functions, get_function_bytecode
+from util import write_to_file, extract_functions, function_ast_to_bytecode
 from concolic_test_case_generator import ConcolicTestCaseGenerator
 from random_test_case_generator import RandomTestCaseGenerator
 from platformdirs import user_data_dir
@@ -32,7 +32,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
 
     for function_name, function_ast in extract_functions(program_root, program_file_path).items():
         function_without_annotations = remove_nagini_annotations(function_ast)
-        functions[function_name] = (function_without_annotations, get_function_bytecode(function_without_annotations))
+        functions[function_name] = (function_without_annotations, function_ast_to_bytecode(function_without_annotations))
 
     if entry_point_function not in functions:
         raise RuntimeError(f"Entry point method {entry_point_function} not found in program")
@@ -41,6 +41,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         write_to_file(os.path.join(output_dir, f"{function_name}_without_annotations.py"), ast.unparse(function_ast))
         write_to_file(os.path.join(output_dir, f"{function_name}_ast.txt"), ast.dump(function_ast, indent=4))
         write_to_file(os.path.join(output_dir, f"{function_name}_bytecode.txt"), function_bytecode.dis())
+        write_to_file(os.path.join(output_dir, f"{function_name}_codeobj.txt"), "\n".join([f"{c}:{getattr(function_bytecode.codeobj, c)}" for c in dir(function_bytecode.codeobj)]))
 
     concolic_test_cases = ConcolicTestCaseGenerator(
         env = { function_name : function_bytecode for function_name, (_, function_bytecode) in functions.items() },
@@ -95,7 +96,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
                 sys.stdout = os.fdopen(fd, 'w') # Python writes to fd
         
     # Run Daikon on data traces to get invariants
-    print(f"Running Daikon over {len(test_case)} test cases.")
+    print(f"Running Daikon over {len(test_cases)} test cases.")
     daikon_result = subprocess.run(["java","-cp",os.path.join(os.path.dirname(__file__), "daikon.jar"),"daikon.Daikon","-o",dtrace_base_path, *dtraces], capture_output=True)
     if daikon_result.returncode != 0:
         write_to_file(os.path.join(output_dir, "daikon_error.txt"), daikon_result.stderr.decode('utf-8'))
@@ -117,14 +118,17 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog="Loop Invariant Finder")
     parser.add_argument("program_file_path", help="Program file path")
     parser.add_argument("entry_point_function", help="Entry point function name")
+    parser.add_argument("-o", "--output_dir", help="Output directory", required=False)
     args = parser.parse_args()
 
     program_file_path = args.program_file_path
     entry_point_function_name = args.entry_point_function
 
-    user_data_directory = user_data_dir(APP_NAME, APP_AUTHOR)
-
-    output_dir_name = f"Invariants-{os.path.basename(program_file_path)}-{entry_point_function_name}-{datetime.now().strftime(f'%Y-%m-%d_%H-%M-%S')}"
-    output_dir = os.path.join(user_data_directory, output_dir_name)
+    if args.output_dir:
+        output_dir = args.output_dir
+    else:
+        user_data_directory = user_data_dir(APP_NAME, APP_AUTHOR)
+        output_dir_name = f"Invariants-{os.path.basename(program_file_path)}-{entry_point_function_name}-{datetime.now().strftime(f'%Y-%m-%d_%H-%M-%S')}"
+        output_dir = os.path.join(user_data_directory, output_dir_name)
 
     find_invariants(program_file_path, entry_point_function_name, output_dir)
