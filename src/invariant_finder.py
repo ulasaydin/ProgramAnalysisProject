@@ -57,10 +57,8 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     # print(random_test_cases)
 
     # TODO: Translate more programs (maybe)
-    # TODO: Implement interpreter
-    # TODO: Implement concolic execution for test case generation
-    # TODO: Run instrumenter on program to get instrumented program
-    # TODO: Output instrumented program to output directory
+    # TODO: (Kalle and Amir) Implement interpreter
+    # TODO: (all of us) Implement concolic execution for test case generation
 
     # Run instrumenter on program to get instrumented program
     instrumented_dir = os.path.join(output_dir, "instrumented")
@@ -98,11 +96,18 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         
     # Run Daikon on data traces to get invariants
     print(f"Running Daikon over {len(test_case)} test cases.")
-    daikon_result = subprocess.run(["java","-cp","daikon.jar","daikon.Daikon","-o",dtrace_base_path, *dtraces], capture_output=True)
-    # TODO: Parse Daikon output and translate invariants to Nagini syntax
-    # TODO: Insert invariant annotations in program ast
+    daikon_result = subprocess.run(["java","-cp",os.path.join(os.path.dirname(__file__), "daikon.jar"),"daikon.Daikon","-o",dtrace_base_path, *dtraces], capture_output=True)
+    if daikon_result.returncode != 0:
+        write_to_file(os.path.join(output_dir, "daikon_error.txt"), daikon_result.stderr.decode('utf-8'))
+    write_to_file(os.path.join(output_dir, "daikon_output.txt"), daikon_result.stdout.decode('utf-8'))
+    # TODO: (Jimena) Parse Daikon output and translate invariants to Nagini syntax
+    # TODO: (Jimena) Insert invariant annotations in program ast
+
+    # Keep AST with invariants
+
     # TODO: Output program with invariants to output directory
-    # TODO: Run Nagini on the annotated program to check invariants
+
+    # TODO: (Ulas) Run Nagini on the annotated program to check invariants
     #       if it fails, remove the invariant and run again
     #       if it passes, we have found the proved invariants
     print("---")

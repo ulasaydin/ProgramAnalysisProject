@@ -5,12 +5,13 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Interpreter:
-    env: dict[str, dis.Bytecode]
-    entry_point: str
-    heap: dict = field(default_factory=dict)
-    stack: list = field(default_factory=list)
-    pc: int = 0
-    done: bool = False
+    def __init__(self, env: dict[str, dis.Bytecode], entry_point: str):
+        self.env = env
+        self.entry_point = entry_point
+        self.heap: dict = {}
+        self.stack: list = []
+        self.pc: int = 0
+        self.done: bool = False
 
     def run(self, max_steps=math.inf) -> bool:
         steps_so_far = 0
