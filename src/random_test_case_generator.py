@@ -7,7 +7,7 @@ from dataclasses import dataclass
 class RandomTestCaseGenerator:
     env: Dict[str, ast.FunctionDef]
     entry_point: str
-    verbose: bool = True
+    verbose: bool = False
 
     def generate_random_test_cases(self) -> List[List[Any]]:
         """
@@ -88,9 +88,8 @@ class RandomTestCaseGenerator:
         try:
             local_context = {}
             
-            # Load all functions from `self.env` into `local_context`
+            # Load all functions from `self.env` into `local_context` such as `check_preconditions` and `within`
             for name, func_ast in self.env.items():
-                print(f"Loading function {name} into local context")
                 function_code = ast.unparse(func_ast)
                 exec(function_code, local_context)
             
