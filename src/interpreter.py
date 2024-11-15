@@ -26,14 +26,16 @@ class ProgramState:
 
 
 class Python39Interpreter:
-    def __init__(self, env: dict[str, dis.Bytecode], entry_point: str, inputs: list[any]):
+    def __init__(self, env: dict[str, dis.Bytecode], entry_point: str):
         self.log("Creating Python39Interpreter")
         self.env: dict[str, dis.Bytecode] = env
         for function_name, bytecode in env.items():
+            for instruction in list(bytecode):
+                if not hasattr(self, f"step_{instruction.opname}"):
+                    raise NotImplementedError(f"Instruction {instruction.opname} not implemented")
             self.log(f"Given function {function_name} in the environment with bytecode:\n {bytecode.dis()}")
         self.entry_point: str = entry_point
-        inputs_ = self.function_initial_locals_from_inputs(env[entry_point], inputs)
-        self.state: ProgramState = ProgramState(entry_point, inputs_)
+        self.state: ProgramState = None
 
     @staticmethod
     def function_initial_locals_from_inputs(bytecode: dis.Bytecode, inputs: list[any]) -> dict[str, any]:
@@ -81,7 +83,9 @@ class Python39Interpreter:
     def heap(self) -> dict:
         return self.state.heap
 
-    def run(self, max_steps=math.inf) -> any:
+    def run(self, inputs: list[any], max_steps=math.inf) -> any:
+        inputs_ = self.function_initial_locals_from_inputs(self.env[self.entry_point], inputs)
+        self.state = ProgramState(self.entry_point, inputs_)
         self.log(f"Starting execution of {self.state.top_frame.function_name} "
               f"for {max_steps} steps with locals {self.state.top_frame.locals}")
         steps_so_far = 0
@@ -201,6 +205,36 @@ class Python39Interpreter:
         i = self.stack.pop()
         a = self.stack.pop()
         self.stack.append(a[i])
+        self.pc += 1
+
+    def step_JUMP_ABSOLUTE(self, instruction: dis.Instruction):
+        self.pc = instruction.arg // 2
+
+    def step_UNARY_NEGATIVE(self, instruction: dis.Instruction):
+        self.stack.append(-self.stack.pop())
+        self.pc += 1
+
+    def step_RAISE_VARARGS(self, instruction: dis.Instruction):
+        if instruction.arg == 1:
+            raise self.stack.pop()
+        elif instruction.arg == 0:
+            raise
+        elif instruction.arg == 2:
+            tos = self.stack.pop()
+            tos1 = self.stack.pop()
+            raise tos1 from tos
+
+    def step_INPLACE_ADD(self, instruction: dis.Instruction):
+        b = self.stack.pop()
+        a = self.stack.pop()
+        self.stack.append(a + b)
+        self.pc += 1
+
+    def step_STORE_SUBSCR(self, instruction: dis.Instruction):
+        tos = self.stack.pop()
+        tos1 = self.stack.pop()
+        tos2 = self.stack.pop()
+        tos1[tos] = tos2
         self.pc += 1
 
     def log(self, message: str):
