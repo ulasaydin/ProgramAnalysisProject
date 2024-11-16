@@ -1,3 +1,4 @@
 mypy==0.902
+typed-ast==1.4.1
 nagini
 platformdirs
