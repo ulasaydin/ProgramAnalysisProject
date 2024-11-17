@@ -5,6 +5,7 @@ import importlib.util
 import sys
 import types
 import os
+import random
 from typing import Union
 
 
@@ -74,3 +75,45 @@ def write_to_file(path: str, text: str):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as file:
         file.write(text)
+
+
+def extract_parameter_types(function_ast: ast.FunctionDef) -> list[str]:
+        parameter_types = []
+        for arg in function_ast.args.args:
+            if isinstance(arg.annotation, ast.Name):
+                parameter_types.append(arg.annotation.id)
+            elif isinstance(arg.annotation, ast.Subscript):
+                if isinstance(arg.annotation.value, ast.Name) and arg.annotation.value.id == "list":
+                    element_type = arg.annotation.slice.id if isinstance(arg.annotation.slice, ast.Name) else "Any"
+                    parameter_types.append(f"list[{element_type}]")
+            else:
+                parameter_types.append("Any")
+        return parameter_types
+
+def generate_random_value(param_type: str) -> any:
+    value = None
+    if param_type == "int":
+        value = random.randint(-100, 100)
+    elif param_type == "float":
+        value = random.uniform(-100.0, 100.0)
+    elif param_type == "str":
+        value = ''.join(random.choices("abcdefghijklmnopqrstuvwxyz", k=random.randint(1, 10)))
+    elif param_type == "bool":
+        value = random.choice([True, False])
+    elif param_type.startswith("list"):
+        inner_type = param_type[5:-1]
+        value = [generate_random_value(inner_type) for _ in range(random.randint(1, 10))]
+    return value
+
+def function_initial_locals_from_inputs(bytecode: dis.Bytecode, inputs: list[any]) -> dict[str, any]:
+    if len(inputs) < bytecode.codeobj.co_argcount:
+        raise TypeError(f"Expected {bytecode.codeobj.co_argcount} positional arguments, got {len(inputs)}")
+    assert len(inputs) >= bytecode.codeobj.co_argcount
+    locals_ = dict(zip(
+        bytecode.codeobj.co_varnames[:bytecode.codeobj.co_argcount],
+        inputs[:bytecode.codeobj.co_argcount]
+    ))
+    # the following is to handle *args
+    if len(inputs) > bytecode.codeobj.co_argcount:
+        locals_[bytecode.codeobj.co_argcount] = inputs[bytecode.codeobj.co_argcount:]
+    return locals_

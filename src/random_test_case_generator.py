@@ -2,6 +2,7 @@ import random
 import ast
 from typing import Any, List, Dict
 from dataclasses import dataclass
+from util import extract_parameter_types, generate_random_value
 
 @dataclass
 class RandomTestCaseGenerator:
@@ -45,32 +46,13 @@ class RandomTestCaseGenerator:
 
     def extract_parameter_types(self, function_ast: ast.FunctionDef) -> List[str]:
         parameter_types = []
-        for arg in function_ast.args.args:
-            if isinstance(arg.annotation, ast.Name):
-                parameter_types.append(arg.annotation.id)
-            elif isinstance(arg.annotation, ast.Subscript):
-                if isinstance(arg.annotation.value, ast.Name) and arg.annotation.value.id == "list":
-                    element_type = arg.annotation.slice.id if isinstance(arg.annotation.slice, ast.Name) else "Any"
-                    parameter_types.append(f"list[{element_type}]")
-            else:
-                parameter_types.append("Any")
+        parameter_types = extract_parameter_types(function_ast)
         if self.verbose:
             print(f"Extracted parameter types for {self.entry_point}: {parameter_types}")
         return parameter_types
 
     def generate_random_value(self, param_type: str) -> Any:
-        value = None
-        if param_type == "int":
-            value = random.randint(-100, 100)
-        elif param_type == "float":
-            value = random.uniform(-100.0, 100.0)
-        elif param_type == "str":
-            value = ''.join(random.choices("abcdefghijklmnopqrstuvwxyz", k=random.randint(1, 10)))
-        elif param_type == "bool":
-            value = random.choice([True, False])
-        elif param_type.startswith("list"):
-            inner_type = param_type[5:-1]
-            value = [self.generate_random_value(inner_type) for _ in range(random.randint(1, 10))]
+        value = generate_random_value(param_type)
         if self.verbose:
             print(f"Generated random value for type {param_type}: {value}")
         return value

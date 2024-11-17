@@ -44,7 +44,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         write_to_file(os.path.join(output_dir, f"{function_name}_codeobj.txt"), "\n".join([f"{c}:{getattr(function_bytecode.codeobj, c)}" for c in dir(function_bytecode.codeobj)]))
 
     concolic_test_cases = ConcolicTestCaseGenerator(
-        env = { function_name : function_bytecode for function_name, (_, function_bytecode) in functions.items() },
+        env = functions,
         entry_point=entry_point_function
     ).generate_test_cases()
 
