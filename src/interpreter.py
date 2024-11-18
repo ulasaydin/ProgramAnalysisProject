@@ -3,10 +3,13 @@ import math
 import builtins
 import os
 import sys
+from typing import Union
 
 sys.path.append(os.path.dirname(__file__))
 
 from util import function_initial_locals_from_inputs
+
+Branch = Union()
 
 class Frame:
     def __init__(self, function_name: str, locals_: dict[str, any]):
@@ -97,11 +100,20 @@ class Python39Interpreter:
             if self.done:
                 return self.stack[-1]
 
-    def step(self, instruction: dis.Instruction):
+    def step(self, instruction: dis.Instruction) -> int:
         try:
-            getattr(self, f"step_{instruction.opname}")(instruction)
+            branch_index = getattr(self, f"step_{instruction.opname}")(instruction)
+            if branch_index == None:
+                return 0
+            return branch_index
+
         except AttributeError:
             raise NotImplementedError(f"Instruction {instruction.opname} not implemented")
+
+    def step_with_state(self, concrete_program_state: ProgramState) -> tuple[int, ProgramState]:
+        self.state = concrete_program_state
+        instruction = self.instructions[self.pc]
+        return (self.step(instruction), self.state)
 
     def step_LOAD_GLOBAL(self, instruction: dis.Instruction):
         self.stack.append(self.bytecode.codeobj.co_names[instruction.arg])
@@ -133,12 +145,14 @@ class Python39Interpreter:
         if len(self.state.frames) == 0:
             self.state.done = True
 
-    def step_JUMP_IF_FALSE_OR_POP(self, instruction: dis.Instruction):
+    def step_JUMP_IF_FALSE_OR_POP(self, instruction: dis.Instruction) -> int:
         if self.stack[-1]:
             self.stack.pop()
             self.pc += 1
+            return 0
         else:
             self.pc = instruction.arg // 2
+            return 1
 
     def step_COMPARE_OP(self, instruction: dis.Instruction):
         b = self.stack.pop()
@@ -158,17 +172,21 @@ class Python39Interpreter:
             self.stack.append(a >= b)
         self.pc += 1
 
-    def step_POP_JUMP_IF_TRUE(self, instruction: dis.Instruction):
+    def step_POP_JUMP_IF_TRUE(self, instruction: dis.Instruction) -> int:
         if self.stack.pop():
             self.pc = instruction.arg // 2
+            return 0
         else:
             self.pc += 1
+            return 1
 
-    def step_POP_JUMP_IF_FALSE(self, instruction: dis.Instruction):
+    def step_POP_JUMP_IF_FALSE(self, instruction: dis.Instruction) -> int:
         if not self.stack.pop():
             self.pc = instruction.arg // 2
+            return 0
         else:
             self.pc += 1
+            return 1
 
     def step_BINARY_FLOOR_DIVIDE(self, instruction: dis.Instruction):
         b = self.stack.pop()
