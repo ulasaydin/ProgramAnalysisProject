@@ -6,7 +6,7 @@ import sys
 import types
 import os
 import random
-from typing import Union
+from typing import Union, Any
 
 
 def extract_functions(program_root: ast.Module, program_file_path: str) -> dict[str, ast.FunctionDef]:
@@ -90,7 +90,10 @@ def extract_parameter_types(function_ast: ast.FunctionDef) -> list[str]:
                 parameter_types.append("Any")
         return parameter_types
 
-def generate_random_value(param_type: str) -> any:
+def extract_parameter_names(function_ast: ast.FunctionDef) -> list[str]:
+    return [arg.arg for arg in function_ast.args.args]
+
+def generate_random_value(param_type: str) -> Any:
     value = None
     if param_type == "int":
         value = random.randint(-100, 100)
@@ -105,7 +108,7 @@ def generate_random_value(param_type: str) -> any:
         value = [generate_random_value(inner_type) for _ in range(random.randint(1, 10))]
     return value
 
-def function_initial_locals_from_inputs(bytecode: dis.Bytecode, inputs: list[any]) -> dict[str, any]:
+def function_initial_locals_from_inputs(bytecode: dis.Bytecode, inputs: list[Any]) -> dict[str, Any]:
     if len(inputs) < bytecode.codeobj.co_argcount:
         raise TypeError(f"Expected {bytecode.codeobj.co_argcount} positional arguments, got {len(inputs)}")
     assert len(inputs) >= bytecode.codeobj.co_argcount

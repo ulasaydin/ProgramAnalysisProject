@@ -3,18 +3,16 @@ import math
 import builtins
 import os
 import sys
-from typing import Union
+from typing import Any
 
 sys.path.append(os.path.dirname(__file__))
 
 from util import function_initial_locals_from_inputs
 
-Branch = Union()
-
 class Frame:
-    def __init__(self, function_name: str, locals_: dict[str, any]):
+    def __init__(self, function_name: str, locals_: dict[str, Any]):
         self.pc: int = 0
-        self.locals: dict[str, any] = locals_
+        self.locals: dict[str, Any] = locals_
         self.function_name: str = function_name
 
     def __repr__(self):
@@ -22,9 +20,9 @@ class Frame:
 
 
 class ProgramState:
-    def __init__(self, entry_point: str, inputs_as_locals: dict[str, any]):
+    def __init__(self, entry_point: str, inputs_as_locals: dict[str, Any]):
         self.heap: dict = {}
-        self.stack: list[any] = []
+        self.stack: list[Any] = []
         self.frames: list[Frame] = [Frame(function_name=entry_point, locals_=inputs_as_locals)]
         self.done: bool = False
 
@@ -43,7 +41,8 @@ class Python39Interpreter:
                     raise NotImplementedError(f"Instruction {instruction.opname} not implemented")
             self.log(f"Given function {function_name} in the environment with bytecode:\n {bytecode.dis()}")
         self.entry_point: str = entry_point
-        self.state: ProgramState = None
+        self.chosen_branch: int = 0
+        self.state: ProgramState = ProgramState(entry_point, {})
 
     @property
     def instructions(self) -> list[dis.Instruction]:
@@ -58,15 +57,15 @@ class Python39Interpreter:
         self.state.top_frame.pc = value
 
     @property
-    def stack(self) -> list[any]:
+    def stack(self) -> list[Any]:
         return self.state.stack
 
     @stack.setter
-    def stack(self, value: list[any]):
+    def stack(self, value: list[Any]):
         self.state.stack = value
 
     @property
-    def locals(self) -> dict[str, any]:
+    def locals(self) -> dict[str, Any]:
         return self.state.top_frame.locals
 
     @property
@@ -81,7 +80,7 @@ class Python39Interpreter:
     def done(self) -> bool:
         return self.state.done
 
-    def run(self, inputs: list[any], max_steps=math.inf) -> any:
+    def run(self, inputs: list[Any], max_steps=math.inf) -> Any:
         inputs_ = function_initial_locals_from_inputs(self.env[self.entry_point], inputs)
         self.state = ProgramState(self.entry_point, inputs_)
         self.log(f"Starting execution of {self.state.top_frame.function_name} "
@@ -100,20 +99,18 @@ class Python39Interpreter:
             if self.done:
                 return self.stack[-1]
 
-    def step(self, instruction: dis.Instruction) -> int:
+    def step(self, instruction: dis.Instruction) -> Any:
         try:
-            branch_index = getattr(self, f"step_{instruction.opname}")(instruction)
-            if branch_index == None:
-                return 0
-            return branch_index
-
+            return getattr(self, f"step_{instruction.opname}")(instruction)
         except AttributeError:
             raise NotImplementedError(f"Instruction {instruction.opname} not implemented")
 
-    def step_with_state(self, concrete_program_state: ProgramState) -> tuple[int, ProgramState]:
+    def step_with_state(self, concrete_program_state: ProgramState) -> tuple[ProgramState, int]:
         self.state = concrete_program_state
         instruction = self.instructions[self.pc]
-        return (self.step(instruction), self.state)
+        self.chosen_branch = 0
+        self.step(instruction)
+        return self.state, self.chosen_branch
 
     def step_LOAD_GLOBAL(self, instruction: dis.Instruction):
         self.stack.append(self.bytecode.codeobj.co_names[instruction.arg])
@@ -145,14 +142,14 @@ class Python39Interpreter:
         if len(self.state.frames) == 0:
             self.state.done = True
 
-    def step_JUMP_IF_FALSE_OR_POP(self, instruction: dis.Instruction) -> int:
+    def step_JUMP_IF_FALSE_OR_POP(self, instruction: dis.Instruction):
         if self.stack[-1]:
             self.stack.pop()
             self.pc += 1
-            return 0
+            self.chosen_branch = 0
         else:
             self.pc = instruction.arg // 2
-            return 1
+            self.chosen_branch = 1
 
     def step_COMPARE_OP(self, instruction: dis.Instruction):
         b = self.stack.pop()
@@ -172,21 +169,21 @@ class Python39Interpreter:
             self.stack.append(a >= b)
         self.pc += 1
 
-    def step_POP_JUMP_IF_TRUE(self, instruction: dis.Instruction) -> int:
+    def step_POP_JUMP_IF_TRUE(self, instruction: dis.Instruction):
         if self.stack.pop():
             self.pc = instruction.arg // 2
-            return 0
+            self.chosen_branch = 0
         else:
             self.pc += 1
-            return 1
+            self.chosen_branch = 1
 
     def step_POP_JUMP_IF_FALSE(self, instruction: dis.Instruction) -> int:
         if not self.stack.pop():
             self.pc = instruction.arg // 2
-            return 0
+            self.chosen_branch = 0
         else:
             self.pc += 1
-            return 1
+            self.chosen_branch = 1
 
     def step_BINARY_FLOOR_DIVIDE(self, instruction: dis.Instruction):
         b = self.stack.pop()
