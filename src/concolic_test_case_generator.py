@@ -1,29 +1,17 @@
 import ast
-from copy import deepcopy
 from dataclasses import dataclass
-import enum
-from typing import Any, List, Dict
-import uuid
+from typing import Any
 import dis
 import z3
+import sys
+import os
 
-from src import symbolic_interpreter
-from src.interpreter import ProgramState, Python39Interpreter
-from src.util import extract_parameter_names
+sys.path.append(os.path.dirname(__file__))
+
+from interpreter import ProgramState, Python39Interpreter
+from util import extract_parameter_names
 from util import extract_parameter_types, function_initial_locals_from_inputs, generate_random_value
 from symbolic_interpreter import SymbolicInterpreter, SymbolicProgramState
-
-
-def types_to_symbolic_inputs(names: list[str], types: list[str]):
-    symbolic_inputs = []
-    for name, typ in zip(names, types):
-        if isinstance(input, int):
-            symbolic_inputs.append(z3.Int(name))
-        elif isinstance(input, bool):
-            symbolic_inputs.append(z3.Bool(name))
-        else:
-            raise NotImplementedError(f"Unsupported type {typ}")
-    return symbolic_inputs
 
 
 @dataclass
@@ -37,12 +25,12 @@ class ConcolicTestCaseGenerator:
         self.test_cases: list[list[Any]] = []
         self.symbolic_arguments: list[z3.ExprRef] = []
 
-    def generate_test_cases(self, max_depth = 50) -> list[list[any]]:
+    def generate_test_cases(self, initial_inputs = None, max_branching_points = 50) -> list[list[any]]:
         entry_point_function_ast, entry_point_function_bytecode = self.env[self.entry_point]
         parameter_types = extract_parameter_types(entry_point_function_ast)
         parameter_names = extract_parameter_names(entry_point_function_ast)
-        random_inputs = [generate_random_value(param_type) for param_type in parameter_types]
-        self.symbolic_arguments = types_to_symbolic_inputs(parameter_names, parameter_types)
+        random_inputs = initial_inputs if initial_inputs else [generate_random_value(param_type) for param_type in parameter_types]
+        self.symbolic_arguments = self.types_to_symbolic_inputs(parameter_names, parameter_types)
         initial_concrete_state = ProgramState(
             self.entry_point,
             function_initial_locals_from_inputs(entry_point_function_bytecode, random_inputs))
@@ -50,8 +38,19 @@ class ConcolicTestCaseGenerator:
             self.entry_point,
             function_initial_locals_from_inputs(entry_point_function_bytecode,
                                                 self.symbolic_arguments))
-        self.find_all_paths_with_max_branching_points(initial_symbolic_state, initial_concrete_state, [], max_depth)
+        self.find_all_paths_with_max_branching_points(random_inputs, initial_symbolic_state, initial_concrete_state, [], max_branching_points)
         return self.test_cases
+
+    def types_to_symbolic_inputs(self, names: list[str], types: list[str]):
+        symbolic_inputs = []
+        for name, typ in zip(names, types):
+            if typ == "int":
+                symbolic_inputs.append(z3.Int(name))
+            elif typ == "bool":
+                symbolic_inputs.append(z3.Bool(name))
+            else:
+                raise NotImplementedError(f"Unsupported type {typ}")
+        return symbolic_inputs
 
     def evaluate_arguments_in_model(self, model: z3.ModelRef) -> list[Any]:
         new_inputs = []
@@ -74,7 +73,9 @@ class ConcolicTestCaseGenerator:
             self.test_cases.append(inputs)
             return
 
+        print("Executing concrete state")
         new_concrete_state, chosen_branch = self.concrete_interpreter.step_with_state(concrete_state)
+        print("Executing symbolic state")
         possible_branches = self.symbolic_interpreter.step_with_state(symbolic_state)
 
         for i, branch in enumerate(possible_branches):

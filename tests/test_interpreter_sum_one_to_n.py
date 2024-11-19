@@ -17,9 +17,13 @@ def sum_one_to_n(n: int) -> int:
         sum += i
     return sum
 
+env = {
+    check_preconditions.__name__: get_function_bytecode(check_preconditions),
+    sum_one_to_n.__name__: get_function_bytecode(sum_one_to_n)
+}
+
 i = Python39Interpreter(
-    {check_preconditions.__name__: get_function_bytecode(check_preconditions),
-     sum_one_to_n.__name__: get_function_bytecode(sum_one_to_n)},
+    env,
     sum_one_to_n.__name__
 )
 

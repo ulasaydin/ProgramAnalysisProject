@@ -90,16 +90,22 @@ class Python39Interpreter:
             instruction = self.instructions[self.pc]
             steps_so_far += 1
             self.log(f"Executing instruction #{steps_so_far}: {instruction.opname} {instruction.argrepr}, "
-                  f"PC: {self.pc * 2} [{self.state.top_frame.function_name}], "
-                  f"Operand Stack: {self.stack}, "
-                  f"Heap: {self.state.heap}, "
-                  f"Locals: {self.state.top_frame.locals}, "
-                  f"Frames: {self.state.frames}")
+                     f"PC: {self.pc * 2} [{self.state.top_frame.function_name}], "
+                     f"Operand Stack: {self.stack}, "
+                     f"Heap: {self.state.heap}, "
+                     f"Locals: {self.state.top_frame.locals}, "
+                     f"Frames: {self.state.frames}")
             self.step(instruction)
             if self.done:
                 return self.stack[-1]
 
     def step(self, instruction: dis.Instruction) -> Any:
+        self.log(f"Executing instruction {instruction.opname} {instruction.argrepr}, "
+                 f"PC: {self.pc * 2} [{self.state.top_frame.function_name}], "
+                 f"Operand Stack: {self.stack}, "
+                 f"Heap: {self.state.heap}, "
+                 f"Locals: {self.state.top_frame.locals}, "
+                 f"Frames: {self.state.frames}")
         try:
             return getattr(self, f"step_{instruction.opname}")(instruction)
         except AttributeError:

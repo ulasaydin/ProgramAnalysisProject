@@ -48,12 +48,14 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         entry_point=entry_point_function
     ).generate_test_cases()
 
+    """
     random_test_cases = RandomTestCaseGenerator(
         env = { function_name : function_ast for function_name, (function_ast, _) in functions.items() },
         entry_point=entry_point_function
     ).generate_random_test_cases()
+    """
 
-    test_cases = concolic_test_cases + random_test_cases
+    test_cases = concolic_test_cases
     # print(f"Generated {len(random_test_cases)} random test cases for {entry_point_function}")
     # print(random_test_cases)
 
