@@ -16,7 +16,7 @@ class Frame:
         self.function_name: str = function_name
 
     def __repr__(self):
-        return f"{self.function_name}"
+        return f"Frame({self.function_name}, locals={self.locals}, pc={self.pc})"
 
 
 class ProgramState:
@@ -30,9 +30,16 @@ class ProgramState:
     def top_frame(self) -> Frame:
         return self.frames[-1]
 
+    def __str__(self):
+        return f"ProgramState(frames={self.frames}, stack={self.stack}, heap={self.heap})"
+
+
+class InterpreterError(Exception):
+    pass
 
 class Python39Interpreter:
-    def __init__(self, env: dict[str, dis.Bytecode], entry_point: str):
+    def __init__(self, env: dict[str, dis.Bytecode], entry_point: str, verbose=False):
+        self.verbose: bool = verbose
         self.log("Creating Python39Interpreter")
         self.env: dict[str, dis.Bytecode] = env
         for function_name, bytecode in env.items():
@@ -232,13 +239,13 @@ class Python39Interpreter:
 
     def step_RAISE_VARARGS(self, instruction: dis.Instruction):
         if instruction.arg == 1:
-            raise self.stack.pop()
+            raise InterpreterError(self.stack.pop())
         elif instruction.arg == 0:
-            raise
+            raise InterpreterError()
         elif instruction.arg == 2:
             tos = self.stack.pop()
             tos1 = self.stack.pop()
-            raise tos1 from tos
+            raise InterpreterError(tos1) from tos
 
     def step_INPLACE_ADD(self, instruction: dis.Instruction):
         b = self.stack.pop()
@@ -254,4 +261,5 @@ class Python39Interpreter:
         self.pc += 1
 
     def log(self, message: str):
-        print(f"{message}")
+        if self.verbose:
+            print(f"{message}")

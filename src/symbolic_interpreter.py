@@ -26,7 +26,8 @@ class SymbolicProgramState(ProgramState):
     def to_concrete_state(self, model: z3.ModelRef):
         concrete_state = deepcopy(self)
         for frame in concrete_state.frames:
-            for var_name, var_value in frame.locals.items():
+            for var_name, (latest_var_name, _) in frame.locals_latest_version.items():
+                var_value = frame.locals[latest_var_name]
                 if isinstance(var_value, z3.ExprRef):
                     if isinstance(var_value, z3.IntNumRef):
                         frame.locals[var_name] = var_value.as_long()
@@ -51,8 +52,8 @@ class SymbolicProgramState(ProgramState):
 
 
 class SymbolicInterpreter(Python39Interpreter):
-    def __init__(self, env, entry_point):
-        super().__init__(env, entry_point)
+    def __init__(self, env, entry_point, verbose=False):
+        super().__init__(env, entry_point, verbose)
         self.possible_branches = []
 
     def step_CALL_FUNCTION(self, instruction: dis.Instruction):
@@ -77,7 +78,7 @@ class SymbolicInterpreter(Python39Interpreter):
         new_var_name = f"{var_name}_{new_version}"
         self.state.top_frame.locals_latest_version[var_name] = new_var_name, new_version
         tos = self.stack.pop()
-        self.state.top_frame.locals[new_var_name] = tos
+        self.state.top_frame.locals[new_var_name] = z3.simplify(tos)
         self.pc += 1
         if isinstance(tos, z3.ArithRef):
             new_var = z3.Int(new_var_name)

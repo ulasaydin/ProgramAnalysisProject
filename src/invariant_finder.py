@@ -3,6 +3,7 @@ import dis
 import importlib.util
 from contextlib import contextmanager
 import subprocess
+import graphviz
 from datetime import datetime
 import ast
 import os
@@ -43,11 +44,12 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         write_to_file(os.path.join(output_dir, f"{function_name}_bytecode.txt"), function_bytecode.dis())
         write_to_file(os.path.join(output_dir, f"{function_name}_codeobj.txt"), "\n".join([f"{c}:{getattr(function_bytecode.codeobj, c)}" for c in dir(function_bytecode.codeobj)]))
 
-    concolic_test_cases = ConcolicTestCaseGenerator(
+    concolic_test_case_generator = ConcolicTestCaseGenerator(
         env = functions,
         entry_point=entry_point_function
-    ).generate_test_cases()
-
+    )
+    concolic_test_cases = concolic_test_case_generator.generate_test_cases()
+    concolic_test_case_generator.dot.render(os.path.join(output_dir, "concolic_tree"), format="pdf")
     """
     random_test_cases = RandomTestCaseGenerator(
         env = { function_name : function_ast for function_name, (function_ast, _) in functions.items() },
@@ -56,12 +58,12 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     """
 
     test_cases = concolic_test_cases
+
+    write_to_file(os.path.join(output_dir, "concolic_test_cases.txt"), str("\n".join([str(tc) for tc in test_cases])))
     # print(f"Generated {len(random_test_cases)} random test cases for {entry_point_function}")
     # print(random_test_cases)
 
-    # TODO: Translate more programs (maybe)
-    # TODO: (Kalle and Amir) Implement interpreter
-    # TODO: (all of us) Implement concolic execution for test case generation
+    # TODO: Translate more programs
 
     # Run instrumenter on program to get instrumented program
     instrumented_dir = os.path.join(output_dir, "instrumented")
