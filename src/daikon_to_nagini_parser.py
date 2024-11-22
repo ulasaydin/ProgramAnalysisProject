@@ -1,72 +1,66 @@
 import re
 
-# Patterns for different invariant types without "orig"
-scalar_pattern = r"(\w+)\s*==\s*post\(\1\)"  # a == post(a)
-non_zero_pattern = r"(\w+)\s*!=\s*0"  # x != 0
-mod_pattern = r"(\w+)\s*!=\s*(\w+)\s*\(mod\s*(\d+)\)"  # x != r (mod m)
-equality_pattern = r"(\w+\[\])\s*==\s*(\w+\[\])"  # a[] == b[]
-greater_than_pattern = r"(\w+)\s*>\s*(\w+)"  # a > b
-less_than_pattern = r"(\w+)\s*<\s*(\w+)"  # a < b
-logical_pattern = r"(\w+)\s*(==|!=|>=|<=|>|<)\s*(\w+)"  # x == y or x != y or x > y 
-one_of_pattern = r"(\w+)\s*one\s*of\s*\{([0-9, ]+)\}"  # n one of {5, 10}
-sum_pattern = r"(\w+)\s*-\s*(\w+)\s*-\s*(\w+)\s*([=!><]+)\s*(\d+)"  # sum - i - j == 0
-single_value_pattern = r"(\w+)\s+has\s+only\s+one\s+value"  # Pattern for single unique value
+def parse_all_daikon_invariants(daikon_output):
 
-def parse_daikon_output(daikon_output_content):
     invariants = []
 
-    daikon_output_content = re.sub(r"size\((\w+)\[\]\)", r"len(\1)", daikon_output_content)
+    # Regex patterns for Daikon invariants
+    orig_pattern = r"(\w+)\s*(==|!=|<=|>=|>|<)\s*orig\((\w+)\)"
+    size_pattern = r"size\((\w+)\[\]\)"
+    general_comparison_pattern = r"(\w+)\s*(==|!=|<=|>=|>|<)\s*(\w+|\d+)"
+    subtraction_pattern = r"(\w+)\s*-\s*(\w+)\s*-\s*(\w+)\s*(==|!=|<=|>=|>|<)\s*([\w\d-]+)"
+    has_only_one_value_pattern = r"(\w+)\s+has\s+only\s+one\s+value"
 
-    # Scalar invariants without "orig"
-    for match in re.finditer(scalar_pattern, daikon_output_content):
-        invariants.append(f"Invariant({match.group(1)} == Result())")
+ 
+    def replace_size_and_null(line):
+        line = re.sub(size_pattern, r"len(\1)", line)  
+        line = line.replace("null", "None") 
+        return line
 
-    # Non-zero invariants
-    for match in re.finditer(non_zero_pattern, daikon_output_content):
-        invariants.append(f"Invariant({match.group(1)} != 0)")
+    def is_valid_invariant(left, operator, right):
+        if left.isdigit() and right.isdigit():
+            return False  
+        if left == right and operator in ["==", "<=", ">="]:
+            return False  
+        return True
 
-    # Modulus invariants
-    for match in re.finditer(mod_pattern, daikon_output_content):
-        invariants.append(f"Invariant({match.group(1)} != {match.group(2)} % {match.group(3)})")
+    # Process the Daikon output line by line
+    lines = [line.strip() for line in daikon_output.splitlines() if line.strip()]
+    for line in lines:
+        # Replace size(a[]) with len(a) and null with None
+        line = replace_size_and_null(line)
 
-    # Equality of arrays
-    for match in re.finditer(equality_pattern, daikon_output_content):
-        invariants.append(f"Invariant({match.group(1)} == {match.group(2)})")
+        # Parse orig(x) patterns
+        if re.search(orig_pattern, line):
+            match = re.findall(orig_pattern, line)
+            for var, operator, orig_var in match:
+                invariants.append(f"Invariant({var} {operator} Old({orig_var}))")
 
-    # Greater-than comparisons
-    for match in re.finditer(greater_than_pattern, daikon_output_content):
-        if "orig" not in match.group(0):  # Exclude invariants with "orig"
-            invariants.append(f"Invariant({match.group(1)} > {match.group(2)})")
+        # Parse "has only one value"
+        elif re.search(has_only_one_value_pattern, line):
+            match = re.findall(has_only_one_value_pattern, line)
+            for var in match:
+                invariants.append(
+                    f"Invariant(Forall(int i, Implies(0 <= i and i < len({var}), {var}[i] == {var}[0])))"
+                )
 
-    # Less-than comparisons
-    for match in re.finditer(less_than_pattern, daikon_output_content):
-        if "orig" not in match.group(0):  # Exclude invariants with "orig"
-            invariants.append(f"Invariant({match.group(1)} < {match.group(2)})")
+        # Parse subtraction relationships
+        elif re.search(subtraction_pattern, line):
+            match = re.findall(subtraction_pattern, line)
+            for var1, var2, var3, operator, value in match:
+                invariants.append(f"Invariant({var1} - {var2} - {var3} {operator} {value})")
 
-    # Logical expressions without "orig"
-    for match in re.finditer(logical_pattern, daikon_output_content):
-        if "orig" not in match.group(0):  # Exclude invariants with "orig"
-            invariants.append(f"Invariant({match.group(1)} {match.group(2)} {match.group(3)})")
-
-    # "One of" invariants (e.g., n one of {5, 10})
-    for match in re.finditer(one_of_pattern, daikon_output_content):
-        values = match.group(2).split(', ')
-        invariants.append(f"Invariant({match.group(1)} one of {{{', '.join(values)}}})")
-
-    # Sum and difference invariants without "orig"
-    for match in re.finditer(sum_pattern, daikon_output_content):
-        if "orig" not in match.group(0):  # Exclude invariants with "orig"
-            invariants.append(f"Invariant({match.group(1)} - {match.group(2)} - {match.group(3)} {match.group(4)} {match.group(5)})")
-
-    # Check for "has only one value" pattern
-    for match in re.finditer(single_value_pattern, daikon_output_content):
-        variable = match.group(1)
-        invariants.append(f"Invariant(Forall(int i, Implies(0 <= i and i < len({variable}), {variable}[i] == {variable}[0])))")
+        # Parse general comparisons
+        elif re.search(general_comparison_pattern, line):
+            match = re.findall(general_comparison_pattern, line)
+            for left, operator, right in match:
+                if is_valid_invariant(left, operator, right):
+                   
+                    left = left.replace("len", "len(a)") if left == "len" else left
+                    right = right.replace("len", "len(a)") if right == "len" else right
+                    invariants.append(f"Invariant({left} {operator} {right})")
 
     # Remove duplicates
-    unique_invariants = list(set(invariants))
+    unique_invariants = sorted(set(invariants))
 
-    # Filter out any invariants containing "orig"
-    filtered_invariants = [inv for inv in unique_invariants if "orig" not in inv]
-    
-    return filtered_invariants
+    return unique_invariants

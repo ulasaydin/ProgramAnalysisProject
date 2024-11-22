@@ -1,5 +1,5 @@
 from invariant_inserter import insert_invariants_in_ast
-from daikon_to_nagini_parser import parse_daikon_output
+from daikon_to_nagini_parser import parse_all_daikon_invariants
 from instrumenter import Instrumenter
 from util import remove_nagini_annotations
 from config import APP_AUTHOR, APP_NAME
@@ -116,7 +116,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     write_to_file(daikon_output_path, daikon_output_content)
     # TODO: (Jimena) Parse Daikon output and translate invariants to Nagini syntax
     print("Parsing Daikon output to Nagini...")
-    nagini_invariants = parse_daikon_output(daikon_output_content)
+    nagini_invariants = parse_all_daikon_invariants(daikon_output_content)
     nagini_output_path = os.path.join(output_dir, "nagini_invariants.txt")
     with open(nagini_output_path, "w") as nagini_file:
         for invariant in nagini_invariants:
@@ -133,8 +133,19 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     # TODO: Output program with invariants to output directory
 
     # TODO: (Ulas) Run Nagini on the annotated program to check invariants
-    #       if it fails, remove the invariant and run again
-    #       if it passes, we have found the proved invariants
+    print("Running Nagini to verify the annotated program...")
+    nagini_result = subprocess.run(["nagini", output_program_path],capture_output=True,text=True)
+    if nagini_result.returncode == 0:
+       print("Nagini verification succeeded!")
+       print("Output:")
+       print(nagini_result.stdout)  
+    else:
+       print("Nagini verification failed.")
+       print("Standard Output:")
+       print(nagini_result.stdout)
+       print("Error Output:")
+       print(nagini_result.stderr) 
+    
     print("---")
 
 
