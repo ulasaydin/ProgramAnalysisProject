@@ -36,5 +36,6 @@
       }
     }
   },
-  "remoteUser": "vscode"
+  "remoteUser": "vscode",
+  "postCreateCommand": "find /workspaces/ProgramAnalysisProject/tests /workspaces/ProgramAnalysisProject/src -type d -name '__pycache__' -exec rm -rf {} +"
 }
