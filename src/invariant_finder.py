@@ -29,7 +29,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     with open(program_file_path) as program_file:
         program_root = ast.parse(program_file.read(), program_file_path)
 
-    functions: dict[str, (ast.FunctionDef, dis.Bytecode)] = {}
+    functions: dict[str, tuple[ast.FunctionDef, dis.Bytecode]] = {}
 
     for function_name, function_ast in extract_functions(program_root, program_file_path).items():
         function_without_annotations = remove_nagini_annotations(function_ast)
@@ -48,7 +48,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         env = functions,
         entry_point=entry_point_function
     )
-    concolic_test_cases = concolic_test_case_generator.generate_test_cases()
+    concolic_test_cases = concolic_test_case_generator.generate_test_cases(max_branching_points=10)
     concolic_test_case_generator.dot.render(os.path.join(output_dir, "concolic_tree"), format="pdf")
     """
     random_test_cases = RandomTestCaseGenerator(

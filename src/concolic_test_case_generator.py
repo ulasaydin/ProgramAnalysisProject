@@ -106,19 +106,20 @@ class ConcolicTestCaseGenerator:
                 modified_concrete_state = new_symbolic_state.to_concrete_state(model)
                 new_inputs = self.evaluate_arguments_in_model(model)
                 new_parent_node = str(uuid4())
-                self.dot.node(new_parent_node, label=f"Concrete State: {modified_concrete_state}, Symbolic State: {new_symbolic_state}, Constraint: {path_constraint}, New inputs: {new_inputs}")
+                self.dot.node(new_parent_node, label=f"Concrete State: {modified_concrete_state}, Constraint: {path_constraint}, New inputs: {new_inputs}") # Symbolic State: {new_symbolic_state},
                 self.dot.edge(parent_node, new_parent_node, label=f"Branch {path_constraint}")
                 self.find_all_paths_with_max_branching_points(new_parent_node, new_inputs, new_symbolic_state, modified_concrete_state, new_path_constraints, max_branching_points - 1)
             else:
                 # we can keep following the concrete execution because we have the concrete state from
-                new_parent_node = str(uuid4())
-                self.dot.node(new_parent_node, label=f"Concrete State: {new_concrete_state}, Symbolic State: {new_symbolic_state}, Constraint: {path_constraint}")
-                self.dot.edge(parent_node, new_parent_node, label=f"chosen branch")
                 new_path_constraints = path_constraints + [path_constraint]
                 if len(possible_branches) > 1:
                     # we decrease depth only if there are multiple branches
+                    new_parent_node = str(uuid4())
+                    self.dot.node(new_parent_node,
+                                  label=f"Concrete State: {new_concrete_state}, Constraint: {path_constraint}") # Symbolic State: {new_symbolic_state},
+                    self.dot.edge(parent_node, new_parent_node, label=f"chosen branch")
                     self.find_all_paths_with_max_branching_points(new_parent_node, inputs, new_symbolic_state, new_concrete_state, new_path_constraints, max_branching_points - 1)
                 else:
                     # we do not decrease depth if there is only one branch
                     # because we want to explore all paths with at most max_depth branching points
-                    self.find_all_paths_with_max_branching_points(new_parent_node, inputs, new_symbolic_state, new_concrete_state, new_path_constraints, max_branching_points)
+                    self.find_all_paths_with_max_branching_points(parent_node, inputs, new_symbolic_state, new_concrete_state, new_path_constraints, max_branching_points)
