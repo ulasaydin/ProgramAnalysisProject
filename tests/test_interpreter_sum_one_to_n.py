@@ -1,6 +1,6 @@
 import pytest
 
-from src.interpreter import Python39Interpreter
+from src.interpreter import Python39Interpreter, InterpreterError
 from tests.common import get_function_bytecode
 
 
@@ -31,5 +31,5 @@ def test_sum_one_to_n():
     assert i.run([5]) == 15
 
 def test_sum_one_to_n_negative():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(InterpreterError):
         i.run([-5])
