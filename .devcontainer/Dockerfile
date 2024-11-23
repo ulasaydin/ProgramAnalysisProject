@@ -2,6 +2,8 @@ FROM python:3.9-bookworm
 
 RUN useradd -m vscode
 
+RUN apt update && apt install -y --no-install-recommends openjdk-17-jdk
+
 RUN python3 -m pip install --upgrade \
     setuptools==69.0.3 \
     gitpython==3.1.41
