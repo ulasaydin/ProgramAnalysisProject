@@ -169,6 +169,9 @@ class Python39Interpreter:
         )
         self.pc += 1
 
+    def create_new_frame(self, function_name: str, locals_: dict[str, Any]):
+        return Frame(function_name=function_name, locals_=locals_)
+
     def step_CALL_FUNCTION(self, instruction: dis.Instruction):
         self.pc += 1
         # pop arguments from top of stack
@@ -178,7 +181,7 @@ class Python39Interpreter:
         function_name = self.stack.pop()
         if function_name in self.env:
             inputs = function_initial_locals_from_inputs(self.env[function_name], inputs)
-            self.state.frames.append(Frame(function_name=function_name, locals_=inputs))
+            self.state.frames.append(self.create_new_frame(function_name=function_name, locals_=inputs))
         elif function_name in dir(builtins):
             self.stack.append(getattr(builtins, function_name)(*inputs))
 

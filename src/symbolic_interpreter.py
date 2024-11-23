@@ -1,4 +1,5 @@
 import builtins
+from typing import Any
 
 import z3
 from copy import deepcopy
@@ -56,18 +57,8 @@ class SymbolicInterpreter(Python39Interpreter):
         super().__init__(env, entry_point, verbose)
         self.possible_branches = []
 
-    def step_CALL_FUNCTION(self, instruction: dis.Instruction):
-        self.pc += 1
-        # pop arguments from top of stack
-        inputs = self.stack[-instruction.arg:]
-        self.stack = self.stack[:-instruction.arg]
-        # pop function name from top of stack
-        function_name = self.stack.pop()
-        if function_name in self.env:
-            inputs = function_initial_locals_from_inputs(self.env[function_name], inputs)
-            self.state.frames.append(SymbolicFrame(function_name=function_name, locals_=inputs))
-        elif function_name in dir(builtins):
-            self.stack.append(getattr(builtins, function_name)(*inputs))
+    def create_new_frame(self, function_name: str, locals_: dict[str, Any]):
+        return SymbolicFrame(function_name, locals_)
 
     def step_STORE_FAST(self, instruction: dis.Instruction):
         var_name = self.bytecode.codeobj.co_varnames[instruction.arg]
