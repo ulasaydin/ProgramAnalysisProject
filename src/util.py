@@ -7,6 +7,11 @@ import types
 import os
 import random
 from typing import Union, Any
+import z3
+
+sys.path.append(os.path.dirname(__file__))
+
+from symbolic_integer_array import SymbolicIntegerArray
 
 
 def extract_functions(program_root: ast.Module, program_file_path: str) -> dict[str, ast.FunctionDef]:
@@ -76,6 +81,8 @@ def write_to_file(path: str, text: str):
     with open(path, "w") as file:
         file.write(text)
 
+def extract_arguments_and_annotations(function_ast: ast.FunctionDef) -> list[tuple[str, Any]]:
+    return [(arg.arg, arg.annotation) for arg in function_ast.args.args]
 
 def extract_parameter_types(function_ast: ast.FunctionDef) -> list[str]:
         parameter_types = []
@@ -120,3 +127,25 @@ def function_initial_locals_from_inputs(bytecode: dis.Bytecode, inputs: list[Any
     if len(inputs) > bytecode.codeobj.co_argcount:
         locals_[bytecode.codeobj.co_argcount] = inputs[bytecode.codeobj.co_argcount:]
     return locals_
+
+def types_to_symbolic_inputs(arguments: list[tuple[str, Any]]) -> list[Any]:
+    symbolic_arguments = []
+    for name, annotation in arguments:
+        if isinstance(annotation, ast.Name):
+            if annotation.id == 'int':
+                symbolic_arguments.append(z3.Int(name))
+            elif annotation.id == 'bool':
+                symbolic_arguments.append(z3.Bool(name))
+        elif isinstance(annotation, ast.Subscript) and isinstance(annotation.value, ast.Name) and annotation.value.id == 'list':
+            if isinstance(annotation.slice, ast.Name) and annotation.slice.id == 'int':
+                symbolic_arguments.append(SymbolicIntegerArray(name))
+        else:
+            raise NotImplementedError(f"Unsupported type annotation {annotation}")
+    return symbolic_arguments
+
+def to_concrete_value(x: Union[z3.ExprRef, SymbolicIntegerArray], model: z3.ModelRef, default=None) -> Union[int, bool, list[int]]:
+    """ Tries to evaluate x in model
+        if not found or can not be evaluated default is returned if provided
+        if default is not provided, random value is returned
+    """
+    pass

@@ -23,8 +23,10 @@ functions = {
     sum_one_to_n.__name__: (get_function_ast(sum_one_to_n), get_function_bytecode(sum_one_to_n))
 }
 
+test_case_generator = ConcolicTestCaseGenerator(
+    env = functions,
+    entry_point = sum_one_to_n.__name__
+)
+
 def test_concolic_test_case_generator():
-    ConcolicTestCaseGenerator(
-        env = functions,
-        entry_point = sum_one_to_n.__name__
-    ).generate_test_cases([4])
+    assert len(test_case_generator.generate_test_cases(test_case_count=10, initial_inputs=[4])) == 10 

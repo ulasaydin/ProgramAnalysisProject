@@ -28,6 +28,13 @@ class ProgramState:
         ]
         self.done: bool = False
 
+    @classmethod
+    def generate_program_state_from_arguments_and_bytecode(cls, entry_point: str, entry_point_function_bytecode: dis.Bytecode, arguments: list[Any]):
+        return cls(
+            entry_point,
+            function_initial_locals_from_inputs(entry_point_function_bytecode, arguments)
+        )
+
     @property
     def top_frame(self) -> Frame:
         return self.frames[-1]
@@ -56,28 +63,6 @@ class Python39Interpreter:
         self.entry_point: str = entry_point
         self.chosen_branch: int = 0
         self.state: ProgramState = ProgramState(entry_point, {})
-        
-    @staticmethod
-    def function_initial_locals_from_inputs(
-        bytecode: dis.Bytecode, inputs: list[any]
-    ) -> dict[str, any]:
-        if len(inputs) < bytecode.codeobj.co_argcount:
-            raise TypeError(
-                f"Expected {bytecode.codeobj.co_argcount} positional arguments, got {len(inputs)}"
-            )
-        assert len(inputs) >= bytecode.codeobj.co_argcount
-        locals_ = dict(
-            zip(
-                bytecode.codeobj.co_varnames[: bytecode.codeobj.co_argcount],
-                inputs[: bytecode.codeobj.co_argcount],
-            )
-        )
-        # the following is to handle *args
-        if len(inputs) > bytecode.codeobj.co_argcount:
-            locals_[bytecode.codeobj.co_argcount] = inputs[
-                bytecode.codeobj.co_argcount :
-            ]
-        return locals_
 
     @property
     def instructions(self) -> list[dis.Instruction]:
@@ -129,9 +114,10 @@ class Python39Interpreter:
             self.log(f"Executing instruction #{steps_so_far}: {instruction.opname} {instruction.argrepr}, "
                      f"PC: {self.pc * 2} [{self.state.top_frame.function_name}], "
                      f"Operand Stack: {self.stack}, "
-                     f"Heap: {self.state.heap}, "
+                     #f"Heap: {self.state.heap}, "
                      f"Locals: {self.state.top_frame.locals}, "
-                     f"Frames: {self.state.frames}")
+                     #f"Frames: {self.state.frames}"
+                     )
             self.step(instruction)
             if self.done:
                 return self.stack[-1]
@@ -140,9 +126,10 @@ class Python39Interpreter:
         self.log(f"Executing instruction {instruction.opname} {instruction.argrepr}, "
                  f"PC: {self.pc * 2} [{self.state.top_frame.function_name}], "
                  f"Operand Stack: {self.stack}, "
-                 f"Heap: {self.state.heap}, "
+                 #f"Heap: {self.state.heap}, "
                  f"Locals: {self.state.top_frame.locals}, "
-                 f"Frames: {self.state.frames}")
+                 #f"Frames: {self.state.frames}\n"
+                 )
         try:
             return getattr(self, f"step_{instruction.opname}")(instruction)
         except AttributeError:
@@ -183,7 +170,10 @@ class Python39Interpreter:
             inputs = function_initial_locals_from_inputs(self.env[function_name], inputs)
             self.state.frames.append(self.create_new_frame(function_name=function_name, locals_=inputs))
         elif function_name in dir(builtins):
-            self.stack.append(getattr(builtins, function_name)(*inputs))
+            self.stack.append(self.handle_builtin_function_call(function_name, inputs))
+
+    def handle_builtin_function_call(self, function_name: str, inputs: list[Any]):
+        return getattr(builtins, function_name)(*inputs)
 
     def step_LOAD_CONST(self, instruction: dis.Instruction):
         self.stack.append(self.bytecode.codeobj.co_consts[instruction.arg])

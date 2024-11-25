@@ -42,11 +42,15 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         write_to_file(os.path.join(output_dir, f"{function_name}_bytecode.txt"), function_bytecode.dis())
         write_to_file(os.path.join(output_dir, f"{function_name}_codeobj.txt"), "\n".join([f"{c}:{getattr(function_bytecode.codeobj, c)}" for c in dir(function_bytecode.codeobj)]))
 
+    test_case_count = 10
+
+    print(f"Generating {test_case_count} test cases for {entry_point_function_name} with concolic test case generator")
+
     concolic_test_case_generator = ConcolicTestCaseGenerator(
         env = functions,
         entry_point=entry_point_function
     )
-    concolic_test_cases = concolic_test_case_generator.generate_test_cases(max_branching_points=10)
+    concolic_test_cases = concolic_test_case_generator.generate_test_cases(test_case_count=test_case_count)
     concolic_test_case_generator.dot.render(os.path.join(output_dir, "concolic_tree"), format="pdf")
     """
     random_test_cases = RandomTestCaseGenerator(
@@ -59,6 +63,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     test_cases = concolic_test_cases
 
     write_to_file(os.path.join(output_dir, "concolic_test_cases.txt"), str("\n".join([str(tc) for tc in test_cases])))
+    print(f"Generated {test_case_count} test cases")
     # print(f"Generated {len(random_test_cases)} random test cases for {entry_point_function}")
     # print(random_test_cases)
 
@@ -102,7 +107,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
                 sys.stdout = os.fdopen(fd, 'w')  # Python writes to fd
 
     # Run Daikon on data traces to get invariants
-    print(f"Running Daikon over {len(test_cases)} test cases.")
+    print(f"Running Daikon over {len(test_cases)} test cases")
     daikon_result = subprocess.run(["java","-cp",os.path.join(os.path.dirname(__file__), "daikon.jar"),"daikon.Daikon","-o",dtrace_base_path, *dtraces], capture_output=True)
 
     if daikon_result.returncode != 0:
@@ -112,13 +117,13 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     daikon_output_content = daikon_result.stdout.decode('utf-8')
     write_to_file(daikon_output_path, daikon_output_content)
     # TODO: (Jimena) Parse Daikon output and translate invariants to Nagini syntax
-    print("Parsing Daikon output to Nagini...")
+    print("Parsing Daikon output to Nagini")
     nagini_invariants = parse_daikon_output(daikon_output_content)
     nagini_output_path = os.path.join(output_dir, "nagini_invariants.txt")
     with open(nagini_output_path, "w") as nagini_file:
         for invariant in nagini_invariants:
             nagini_file.write(f"{invariant}\n")
-    print(f"invariants saved to {nagini_output_path}")
+    print(f"Invariants saved to {nagini_output_path}")
 
     # TODO: (Jimena) Insert invariant annotations in program ast
 
