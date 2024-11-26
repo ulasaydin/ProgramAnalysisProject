@@ -44,7 +44,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
 
     test_case_count = 10
 
-    print(f"Generating {test_case_count} test cases for {entry_point_function_name} with concolic test case generator")
+    print(f"Generating {test_case_count} test cases for {entry_point_function} with concolic test case generator")
 
     concolic_test_case_generator = ConcolicTestCaseGenerator(
         env = functions,

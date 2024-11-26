@@ -143,9 +143,14 @@ def types_to_symbolic_inputs(arguments: list[tuple[str, Any]]) -> list[Any]:
             raise NotImplementedError(f"Unsupported type annotation {annotation}")
     return symbolic_arguments
 
-def to_concrete_value(x: Union[z3.ExprRef, SymbolicIntegerArray], model: z3.ModelRef, default=None) -> Union[int, bool, list[int]]:
-    """ Tries to evaluate x in model
-        if not found or can not be evaluated default is returned if provided
-        if default is not provided, random value is returned
-    """
-    pass
+def extend_model_with_inputs(solver: z3.Solver, model: z3.ModelRef, inputs: dict[Union[z3.ExprRef, SymbolicIntegerArray], Any]) -> z3.ModelRef:
+    print("Initial model", model)
+    for e, v in inputs.items():
+        if isinstance(e, SymbolicIntegerArray):
+            continue
+        if model[e] is None:
+            solver.add(e == v)
+    solver.check()
+    new_model = solver.model()
+    print("Extended model", new_model)
+    return new_model

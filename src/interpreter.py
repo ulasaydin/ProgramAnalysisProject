@@ -5,6 +5,8 @@ import os
 import sys
 from typing import Any
 
+from attr import dataclass
+
 sys.path.append(os.path.dirname(__file__))
 
 from util import function_initial_locals_from_inputs
@@ -16,11 +18,14 @@ class Frame:
         self.function_name: str = function_name
 
     def __repr__(self):
-        return f"Frame({self.function_name}, locals={self.locals}, pc={self.pc})"
+        return f"Frame({self.function_name}, locals={self.locals}, pc={self.pc * 2})"
 
+@dataclass
+class HeapReference:
+    address: int
 
 class ProgramState:
-    def __init__(self, entry_point: str, inputs_as_locals: dict[str, Any]):
+    def __init__(self, entry_point: str, inputs_as_locals: dict[str, Any], heap: dict[int, Any]):
         self.heap: dict = {}
         self.stack: list[any] = []
         self.frames: list[Frame] = [
@@ -29,10 +34,15 @@ class ProgramState:
         self.done: bool = False
 
     @classmethod
-    def generate_program_state_from_arguments_and_bytecode(cls, entry_point: str, entry_point_function_bytecode: dis.Bytecode, arguments: list[Any]):
+    def generate_program_state_from_arguments_and_bytecode(cls, 
+                                                           entry_point: str, 
+                                                           entry_point_function_bytecode: dis.Bytecode, 
+                                                           arguments: list[Any],
+                                                           heap: dict[int, Any]):
         return cls(
             entry_point,
-            function_initial_locals_from_inputs(entry_point_function_bytecode, arguments)
+            function_initial_locals_from_inputs(entry_point_function_bytecode, arguments),
+            heap
         )
 
     @property
@@ -47,8 +57,9 @@ class InterpreterError(Exception):
     pass
 
 class Python39Interpreter:
-    def __init__(self, env: dict[str, dis.Bytecode], entry_point: str, verbose=False):
+    def __init__(self, env: dict[str, dis.Bytecode], entry_point: str, name=None, verbose=False):
         self.verbose: bool = verbose
+        self.name: str = name if name else "Python39Interpreter"
         self.log("Creating Python39Interpreter")
         self.env: dict[str, dis.Bytecode] = env
         for function_name, bytecode in env.items():
@@ -62,7 +73,7 @@ class Python39Interpreter:
             )
         self.entry_point: str = entry_point
         self.chosen_branch: int = 0
-        self.state: ProgramState = ProgramState(entry_point, {})
+        self.state: ProgramState = ProgramState(entry_point, {}, {})
 
     @property
     def instructions(self) -> list[dis.Instruction]:
@@ -115,7 +126,7 @@ class Python39Interpreter:
                      f"PC: {self.pc * 2} [{self.state.top_frame.function_name}], "
                      f"Operand Stack: {self.stack}, "
                      #f"Heap: {self.state.heap}, "
-                     f"Locals: {self.state.top_frame.locals}, "
+                     f"Locals: {self.state.top_frame.locals}"
                      #f"Frames: {self.state.frames}"
                      )
             self.step(instruction)
@@ -127,12 +138,13 @@ class Python39Interpreter:
                  f"PC: {self.pc * 2} [{self.state.top_frame.function_name}], "
                  f"Operand Stack: {self.stack}, "
                  #f"Heap: {self.state.heap}, "
-                 f"Locals: {self.state.top_frame.locals}, "
+                 f"Locals: {self.state.top_frame.locals}"
                  #f"Frames: {self.state.frames}\n"
                  )
-        try:
-            return getattr(self, f"step_{instruction.opname}")(instruction)
-        except AttributeError:
+        step_function_name = f"step_{instruction.opname}"
+        if hasattr(self, step_function_name):
+            return getattr(self, step_function_name)(instruction)
+        else:
             raise NotImplementedError(
                 f"Instruction {instruction.opname} not implemented"
             )
@@ -219,11 +231,20 @@ class Python39Interpreter:
             self.pc += 1
             self.chosen_branch = 1
 
-    def step_POP_JUMP_IF_FALSE(self, instruction: dis.Instruction) -> int:
+    def step_POP_JUMP_IF_FALSE(self, instruction: dis.Instruction):
         if not self.stack.pop():
             self.pc = instruction.arg // 2
             self.chosen_branch = 0
         else:
+            self.pc += 1
+            self.chosen_branch = 1
+
+    def step_JUMP_IF_TRUE_OR_POP(self, instruction: dis.Instruction):
+        if self.stack[-1]:
+            self.pc = instruction.arg // 2
+            self.chosen_branch = 0
+        else:
+            self.stack.pop()
             self.pc += 1
             self.chosen_branch = 1
 
@@ -299,4 +320,4 @@ class Python39Interpreter:
 
     def log(self, message: str):
         if self.verbose:
-            print(f"{message}")
+            print(f"{self.name}: {message}")
