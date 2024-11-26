@@ -35,7 +35,7 @@ class SymbolicIntegerArray:
         res = []
         for i in range(l):
             if i in self.__array:
-                print(f"evaluating {self.__array[i]}")
+                #print(f"evaluating {self.__array[i]}")
                 res.append(model.evaluate(self.__array[i]).as_long())
             else:
                 res.append(0)

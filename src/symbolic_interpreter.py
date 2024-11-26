@@ -37,7 +37,7 @@ class SymbolicProgramState(ProgramState):
         return self.frames[-1]
 
     def to_concrete_state(self, model: z3.ModelRef):
-        print("Making symbolic state concrete", self)
+        #print("Making symbolic state concrete", self)
         concrete_state = deepcopy(self)
         for frame in concrete_state.frames:
             for var_name, var_value in frame.locals.items():
@@ -204,14 +204,20 @@ class SymbolicInterpreter(Python39Interpreter):
 
     def step_LOAD_CONST(self, instruction: dis.Instruction):
         const = self.bytecode.codeobj.co_consts[instruction.arg]
-        if isinstance(const, int):
+        if type(const) == int:
             self.stack.append(z3.IntVal(const))
-        elif isinstance(const, bool):
+        elif type(const) == bool:
             self.stack.append(z3.BoolVal(const))
         elif const is None:
             self.stack.append(const)
-        elif isinstance(const, str):
+        elif type(const) == str:
             self.stack.append(const)
         else:
             raise NotImplementedError(f"Unsupported constant type {type(const)}")
+        self.pc += 1
+
+    def step_BINARY_FLOOR_DIVIDE(self, instruction: dis.Instruction):
+        b = self.stack.pop()
+        a = self.stack.pop()
+        self.stack.append(a / b)
         self.pc += 1

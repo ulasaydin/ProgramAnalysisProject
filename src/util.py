@@ -144,7 +144,7 @@ def types_to_symbolic_inputs(arguments: list[tuple[str, Any]]) -> list[Any]:
     return symbolic_arguments
 
 def extend_model_with_inputs(solver: z3.Solver, model: z3.ModelRef, inputs: dict[Union[z3.ExprRef, SymbolicIntegerArray], Any]) -> z3.ModelRef:
-    print("Initial model", model)
+    #print("Initial model", model)
     for e, v in inputs.items():
         if isinstance(e, SymbolicIntegerArray):
             continue
@@ -152,5 +152,5 @@ def extend_model_with_inputs(solver: z3.Solver, model: z3.ModelRef, inputs: dict
             solver.add(e == v)
     solver.check()
     new_model = solver.model()
-    print("Extended model", new_model)
+    #print("Extended model", new_model)
     return new_model

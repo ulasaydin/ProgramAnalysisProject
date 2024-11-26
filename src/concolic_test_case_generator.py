@@ -105,7 +105,7 @@ class ConcolicTestCaseGenerator:
                     continue
                 else:
                     raise RuntimeError("Unexpected z3 result")
-                print(f"Branching {new_symbolic_state}")
+                #print(f"Branching {new_symbolic_state}")
                 old_inputs_dict = dict(zip(self.symbolic_arguments, inputs))
                 extended_model_with_old_inputs = extend_model_with_inputs(solver, model, old_inputs_dict)
                 new_inputs = self.evaluate_arguments_in_model(extended_model_with_old_inputs)
