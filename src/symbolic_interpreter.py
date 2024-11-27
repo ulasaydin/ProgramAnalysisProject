@@ -1,3 +1,5 @@
+from multiprocessing.heap import Heap
+from re import S
 from typing import Any
 
 import z3
@@ -5,7 +7,7 @@ from copy import deepcopy
 import dis
 
 from interpreter import Frame, ProgramState, Python39Interpreter
-from symbolic_integer_array import SymbolicIntegerArray
+from symbolic_integer_array import HeapReference, SymbolicIntegerArray
 
 
 class SymbolicFrame(Frame):
@@ -15,7 +17,7 @@ class SymbolicFrame(Frame):
 
 
 class SymbolicProgramState(ProgramState):
-    def __init__(self, entry_point: str, inputs_as_locals: dict[str, Any], heap: dict[str, Any]):
+    def __init__(self, entry_point: str, inputs_as_locals: dict[str, Any], heap: dict[int, SymbolicIntegerArray]):
         super().__init__(entry_point, inputs_as_locals, heap)
         self.frames: list[SymbolicFrame] = [SymbolicFrame(function_name=entry_point, locals_=inputs_as_locals)]
 
@@ -42,8 +44,7 @@ class SymbolicProgramState(ProgramState):
         for frame in concrete_state.frames:
             for var_name, var_value in frame.locals.items():
                 #var_value = frame.locals[latest_var_name]
-                if isinstance(var_value, SymbolicIntegerArray):
-                    frame.locals[var_name] = var_value.to_concrete(model)
+                if isinstance(var_value, HeapReference):
                     continue
                 if z3.is_expr(var_value):
                     e = model.evaluate(var_value)
@@ -52,6 +53,8 @@ class SymbolicProgramState(ProgramState):
                             frame.locals[var_name] = e.as_long()
                         if z3.is_bool(e):
                             frame.locals[var_name] = z3.is_true(e)
+                    else:
+                        pass # TODO
                 else:
                     frame.locals[var_name] = var_value
                 """
@@ -72,8 +75,7 @@ class SymbolicProgramState(ProgramState):
                     frame.locals[var_name] = var_value
                 """
         for i, stack_value in enumerate(concrete_state.stack):
-            if isinstance(stack_value, SymbolicIntegerArray):
-                stack_value = stack_value.to_concrete(model)
+            if isinstance(stack_value, HeapReference):
                 continue
             if z3.is_expr(stack_value):
                 e = model.evaluate(stack_value)
@@ -82,6 +84,8 @@ class SymbolicProgramState(ProgramState):
                         stack_value = e.as_long()
                     if z3.is_bool(e):
                         stack_value = z3.is_true(e)
+                else:
+                    pass # TODO
             """
             if isinstance(stack_value, z3.ExprRef):
                 if isinstance(stack_value, z3.ArithRef):
@@ -92,6 +96,9 @@ class SymbolicProgramState(ProgramState):
                     raise NotImplementedError(f"Unsupported z3 type {type(stack_value)}")
             """
             concrete_state.stack[i] = stack_value
+        for k, v in concrete_state.heap.items():
+            if isinstance(v, SymbolicIntegerArray):
+                concrete_state.heap[k] = v.to_concrete(model)
         return concrete_state
 
 
@@ -102,9 +109,11 @@ class SymbolicInterpreter(Python39Interpreter):
         self.constraints = []
 
     def handle_builtin_function_call(self, function_name, inputs):
-        if function_name == 'len' and isinstance(inputs[0], SymbolicIntegerArray):
-            self.constraints.append(inputs[0].length() >= 0)
-            return inputs[0].length()
+        if function_name == 'len' and isinstance(inputs[0], HeapReference):
+            container = self.heap[inputs[0].address]
+            if isinstance(container, SymbolicIntegerArray):
+                self.constraints.append(container.length() >= 0)
+                return container.length()
 
     def create_new_frame(self, function_name: str, locals_: dict[str, Any]):
         return SymbolicFrame(function_name, locals_)

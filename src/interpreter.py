@@ -5,10 +5,9 @@ import os
 import sys
 from typing import Any
 
-from attr import dataclass
-
 sys.path.append(os.path.dirname(__file__))
 
+from symbolic_integer_array import HeapReference, SymbolicIntegerArray
 from util import function_initial_locals_from_inputs
 
 class Frame:
@@ -20,13 +19,9 @@ class Frame:
     def __repr__(self):
         return f"Frame({self.function_name}, locals={self.locals}, pc={self.pc * 2})"
 
-@dataclass
-class HeapReference:
-    address: int
-
 class ProgramState:
-    def __init__(self, entry_point: str, inputs_as_locals: dict[str, Any], heap: dict[int, Any]):
-        self.heap: dict = {}
+    def __init__(self, entry_point: str, inputs_as_locals: dict[str, Any], heap: dict[int, SymbolicIntegerArray]):
+        self.heap: dict[int, SymbolicIntegerArray] = heap
         self.stack: list[any] = []
         self.frames: list[Frame] = [
             Frame(function_name=entry_point, locals_=inputs_as_locals)
@@ -113,7 +108,9 @@ class Python39Interpreter:
 
     def run(self, inputs: list[Any], max_steps=math.inf) -> Any:
         inputs_ = function_initial_locals_from_inputs(self.env[self.entry_point], inputs)
-        self.state = ProgramState(self.entry_point, inputs_)
+        self.state = ProgramState.generate_program_state_from_arguments_and_bytecode(
+            self.entry_point, self.env[self.entry_point], inputs_, {}
+        )
         self.log(
             f"Starting execution of {self.state.top_frame.function_name} "
             f"for {max_steps} steps with locals {self.state.top_frame.locals}"
@@ -125,7 +122,7 @@ class Python39Interpreter:
             self.log(f"Executing instruction #{steps_so_far}: {instruction.opname} {instruction.argrepr}, "
                      f"PC: {self.pc * 2} [{self.state.top_frame.function_name}], "
                      f"Operand Stack: {self.stack}, "
-                     #f"Heap: {self.state.heap}, "
+                     f"Heap: {self.state.heap}, "
                      f"Locals: {self.state.top_frame.locals}"
                      #f"Frames: {self.state.frames}"
                      )
@@ -137,7 +134,7 @@ class Python39Interpreter:
         self.log(f"Executing instruction {instruction.opname} {instruction.argrepr}, "
                  f"PC: {self.pc * 2} [{self.state.top_frame.function_name}], "
                  f"Operand Stack: {self.stack}, "
-                 #f"Heap: {self.state.heap}, "
+                 f"Heap: {self.state.heap}, "
                  f"Locals: {self.state.top_frame.locals}"
                  #f"Frames: {self.state.frames}\n"
                  )
@@ -185,7 +182,13 @@ class Python39Interpreter:
             self.stack.append(self.handle_builtin_function_call(function_name, inputs))
 
     def handle_builtin_function_call(self, function_name: str, inputs: list[Any]):
-        return getattr(builtins, function_name)(*inputs)
+        if function_name == "len" and isinstance(inputs[0], HeapReference):
+            return len(self.heap[inputs[0].address])
+        elif function_name == "RuntimeError":
+            return RuntimeError(inputs[0])
+        else:
+            raise NotImplementedError(f"Builtin function {function_name} not supported")
+        #return getattr(builtins, function_name)(*inputs)
 
     def step_LOAD_CONST(self, instruction: dis.Instruction):
         self.stack.append(self.bytecode.codeobj.co_consts[instruction.arg])
@@ -278,7 +281,7 @@ class Python39Interpreter:
 
     def step_BINARY_SUBSCR(self, instruction: dis.Instruction):
         i = self.stack.pop()
-        a = self.stack.pop()
+        a = self.heap[self.stack.pop().address]
         self.stack.append(a[i])
         self.pc += 1
 
@@ -313,7 +316,7 @@ class Python39Interpreter:
 
     def step_STORE_SUBSCR(self, instruction: dis.Instruction):
         tos = self.stack.pop()
-        tos1 = self.stack.pop()
+        tos1 = self.heap[self.stack.pop().address]
         tos2 = self.stack.pop()
         tos1[tos] = tos2
         self.pc += 1

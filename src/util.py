@@ -11,7 +11,7 @@ import z3
 
 sys.path.append(os.path.dirname(__file__))
 
-from symbolic_integer_array import SymbolicIntegerArray
+from symbolic_integer_array import SymbolicIntegerArray, HeapReference
 
 
 def extract_functions(program_root: ast.Module, program_file_path: str) -> dict[str, ast.FunctionDef]:
@@ -128,8 +128,9 @@ def function_initial_locals_from_inputs(bytecode: dis.Bytecode, inputs: list[Any
         locals_[bytecode.codeobj.co_argcount] = inputs[bytecode.codeobj.co_argcount:]
     return locals_
 
-def types_to_symbolic_inputs(arguments: list[tuple[str, Any]]) -> list[Any]:
+def types_to_symbolic_inputs_and_heap(arguments: list[tuple[str, Any]]) -> tuple[list[Any], dict[int, SymbolicIntegerArray]]:
     symbolic_arguments = []
+    symbolic_heap = {}
     for name, annotation in arguments:
         if isinstance(annotation, ast.Name):
             if annotation.id == 'int':
@@ -138,15 +139,35 @@ def types_to_symbolic_inputs(arguments: list[tuple[str, Any]]) -> list[Any]:
                 symbolic_arguments.append(z3.Bool(name))
         elif isinstance(annotation, ast.Subscript) and isinstance(annotation.value, ast.Name) and annotation.value.id == 'list':
             if isinstance(annotation.slice, ast.Name) and annotation.slice.id == 'int':
-                symbolic_arguments.append(SymbolicIntegerArray(name))
+                symbolic_array = SymbolicIntegerArray(name)
+                symbolic_heap[id(symbolic_array)] = symbolic_array
+                symbolic_arguments.append(HeapReference(id(symbolic_array)))
         else:
             raise NotImplementedError(f"Unsupported type annotation {annotation}")
-    return symbolic_arguments
+    return symbolic_arguments, symbolic_heap
 
-def extend_model_with_inputs(solver: z3.Solver, model: z3.ModelRef, inputs: dict[Union[z3.ExprRef, SymbolicIntegerArray], Any]) -> z3.ModelRef:
+def types_to_concrete_inputs_and_heap(arguments: list[tuple[str, Any]]) -> tuple[list[Any], dict[int, list[int]]]:
+    concrete_arguments = []
+    concrete_heap = {}
+    for _, annotation in arguments:
+        if isinstance(annotation, ast.Name):
+            if annotation.id == 'int':
+                concrete_arguments.append(generate_random_value('int'))
+            elif annotation.id == 'bool':
+                concrete_arguments.append(generate_random_value('bool'))
+        elif isinstance(annotation, ast.Subscript) and isinstance(annotation.value, ast.Name) and annotation.value.id == 'list':
+            if isinstance(annotation.slice, ast.Name) and annotation.slice.id == 'int':
+                concrete_array = generate_random_value('list[int]')
+                concrete_heap[id(concrete_array)] = concrete_array
+                concrete_arguments.append(HeapReference(id(concrete_array)))
+        else:
+            raise NotImplementedError(f"Unsupported type annotation {annotation}")
+    return concrete_arguments, concrete_heap
+
+def extend_model_with_inputs(solver: z3.Solver, model: z3.ModelRef, inputs: dict[Union[z3.ExprRef, HeapReference], Any]) -> z3.ModelRef:
     #print("Initial model", model)
     for e, v in inputs.items():
-        if isinstance(e, SymbolicIntegerArray):
+        if isinstance(e, HeapReference):
             continue
         if model[e] is None:
             solver.add(e == v)
@@ -154,3 +175,28 @@ def extend_model_with_inputs(solver: z3.Solver, model: z3.ModelRef, inputs: dict
     new_model = solver.model()
     #print("Extended model", new_model)
     return new_model
+
+def extend_model_with_heap(solver: z3.Solver, model: z3.ModelRef, symbolic_to_concrete_heap: dict[int, int], symbolic_heap: dict[int, SymbolicIntegerArray], concrete_heap: dict[int, list[int]]) -> z3.ModelRef:
+    #print("Initial model", model)
+    for heap_ref, symbolic_array in symbolic_heap.items():
+        concrete_array = concrete_heap[symbolic_to_concrete_heap[heap_ref]]
+        for i, v in symbolic_array.variables.items():
+            if model[v] is None:
+                i = model.evaluate(i)
+                if z3.is_int_value(i):
+                    i = i.as_long()
+                    #print("Adding constraint", v == concrete_array[i])
+                    solver.add(v == concrete_array[i])
+    solver.check()
+    new_model = solver.model()
+    #print("Extended model", new_model)
+    return new_model
+
+def test_case_from_inputs_and_heap(inputs: list[Any], heap: dict[int, SymbolicIntegerArray]) -> list[Any]:
+    test_case = []
+    for input_ in inputs:
+        if isinstance(input_, HeapReference):
+            test_case.append(heap[input_.address])
+        else:
+            test_case.append(input_)
+    return test_case
