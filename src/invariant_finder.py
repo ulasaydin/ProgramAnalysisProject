@@ -1,18 +1,7 @@
-from invariant_inserter import insert_invariants_in_ast
-from daikon_to_nagini_parser import parse_all_daikon_invariants
-from instrumenter import Instrumenter
-from util import remove_nagini_annotations
-from config import APP_AUTHOR, APP_NAME
-from platformdirs import user_data_dir
-from random_test_case_generator import RandomTestCaseGenerator
-from concolic_test_case_generator import ConcolicTestCaseGenerator
-from util import write_to_file, extract_functions, function_ast_to_bytecode
 import argparse
 import dis
 import importlib.util
-from contextlib import contextmanager
 import subprocess
-import graphviz
 from datetime import datetime
 import ast
 import os
@@ -20,6 +9,14 @@ import sys
 
 sys.path.append(os.path.dirname(__file__))
 
+from invariant_inserter import insert_invariants_in_ast
+from daikon_to_nagini_parser import parse_all_daikon_invariants
+from instrumenter import Instrumenter
+from util import remove_nagini_annotations
+from config import APP_AUTHOR, APP_NAME
+from platformdirs import user_data_dir
+from concolic_test_case_generator import ConcolicTestCaseGenerator
+from util import write_to_file, extract_functions, function_ast_to_bytecode
 
 def find_invariants(program_file_path: str, entry_point_function: str, output_dir: str):
     print(f"Finding invariants for {entry_point_function} in {program_file_path}:")
@@ -50,7 +47,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         entry_point=entry_point_function
     )
     concolic_test_cases = concolic_test_case_generator.generate_test_cases(max_branching_points=10)
-    concolic_test_case_generator.dot.render(os.path.join(output_dir, "concolic_tree"), format="pdf")
+    #concolic_test_case_generator.dot.render(os.path.join(output_dir, "concolic_tree"), format="pdf")
     """
     random_test_cases = RandomTestCaseGenerator(
         env={function_name: function_ast for function_name,
@@ -134,7 +131,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
 
     # TODO: (Ulas) Run Nagini on the annotated program to check invariants
     print("Running Nagini to verify the annotated program...")
-    nagini_result = subprocess.run(["nagini", output_program_path],capture_output=True,text=True)
+    nagini_result = subprocess.run(["nagini", "--select", entry_point_function, output_program_path],capture_output=True,text=True)
     if nagini_result.returncode == 0:
        print("Nagini verification succeeded!")
        print("Output:")

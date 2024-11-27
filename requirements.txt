@@ -1,5 +1,6 @@
 mypy==0.902
-typed-ast==1.4.1
+typed-ast==1.5.0
 nagini
 platformdirs
 graphviz
+z3-solver
