@@ -1,13 +1,14 @@
+from typing import List
 from nagini_contracts.contracts import *
 
 from theories.TArrays import within, eq
 
 
-def check_preconditions(a: list[int], from_index: int, to_index: int, val: int) -> None:
+def check_preconditions(a: List[int], from_index: int, to_index: int, val: int) -> None:
     if not within(a, from_index, to_index):
         raise RuntimeError("Precondition failed: within(a, from_index, to_index)")
 
-def fill_b(a: list[int], from_index: int, to_index: int, val: int) -> None:
+def fill_b(a: List[int], from_index: int, to_index: int, val: int) -> None:
     Requires(Acc(list_pred(a)))
     Requires(within(a, from_index, to_index))
 

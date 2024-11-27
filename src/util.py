@@ -110,7 +110,7 @@ def generate_random_value(param_type: str) -> Any:
         value = ''.join(random.choices("abcdefghijklmnopqrstuvwxyz", k=random.randint(1, 10)))
     elif param_type == "bool":
         value = random.choice([True, False])
-    elif param_type.startswith("list"):
+    elif param_type.startswith("list") or param_type.startswith("List"):
         inner_type = param_type[5:-1]
         value = [generate_random_value(inner_type) for _ in range(random.randint(1, 10))]
     return value
@@ -137,7 +137,7 @@ def types_to_symbolic_inputs_and_heap(arguments: list[tuple[str, Any]]) -> tuple
                 symbolic_arguments.append(z3.Int(name))
             elif annotation.id == 'bool':
                 symbolic_arguments.append(z3.Bool(name))
-        elif isinstance(annotation, ast.Subscript) and isinstance(annotation.value, ast.Name) and annotation.value.id == 'list':
+        elif isinstance(annotation, ast.Subscript) and isinstance(annotation.value, ast.Name) and annotation.value.id in ['list', 'List']:
             if isinstance(annotation.slice, ast.Name) and annotation.slice.id == 'int':
                 symbolic_array = SymbolicIntegerArray(name)
                 symbolic_heap[id(symbolic_array)] = symbolic_array
@@ -155,7 +155,7 @@ def types_to_concrete_inputs_and_heap(arguments: list[tuple[str, Any]]) -> tuple
                 concrete_arguments.append(generate_random_value('int'))
             elif annotation.id == 'bool':
                 concrete_arguments.append(generate_random_value('bool'))
-        elif isinstance(annotation, ast.Subscript) and isinstance(annotation.value, ast.Name) and annotation.value.id == 'list':
+        elif isinstance(annotation, ast.Subscript) and isinstance(annotation.value, ast.Name) and annotation.value.id in ['list', 'List']:
             if isinstance(annotation.slice, ast.Name) and annotation.slice.id == 'int':
                 concrete_array = generate_random_value('list[int]')
                 concrete_heap[id(concrete_array)] = concrete_array

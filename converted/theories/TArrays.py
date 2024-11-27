@@ -1,14 +1,15 @@
+from typing import List
 from nagini_contracts.contracts import *
 
 @Pure
-def within(a: list[int], fromIndex: int, toIndex: int) -> bool:
+def within(a: List[int], fromIndex: int, toIndex: int) -> bool:
     Requires(Acc(list_pred(a)))
     Ensures(Result() == (0 <= fromIndex and fromIndex <= toIndex and toIndex <= len(a)))
 
     return 0 <= fromIndex and fromIndex <= toIndex and toIndex <= len(a)
 
 @Pure
-def eq(a: list[int], fromIndex: int, toIndex: int, key: int) -> bool:
+def eq(a: List[int], fromIndex: int, toIndex: int, key: int) -> bool:
     Requires(Acc(list_pred(a)) and within(a, fromIndex, toIndex))
     Ensures(Result() == Forall(int, lambda i: Implies(fromIndex <= i and i < toIndex, a[i] == key)))
 
@@ -19,7 +20,7 @@ def eq(a: list[int], fromIndex: int, toIndex: int, key: int) -> bool:
         return first == key and eq(a, fromIndex + 1, toIndex, key)
 
 @Pure
-def sorted(a: list[int], fromIndex: int, toIndex: int) -> bool:
+def sorted(a: List[int], fromIndex: int, toIndex: int) -> bool:
     Requires(Acc(list_pred(a)))
     Requires(within(a, fromIndex, toIndex))
     Ensures(Result() == Forall(int, lambda i: 
@@ -35,7 +36,7 @@ def sorted(a: list[int], fromIndex: int, toIndex: int) -> bool:
     return first <= second and sorted(a, fromIndex + 1, toIndex)
 
 @Pure
-def TArraysIn(a: list[int], fromIndex: int, toIndex: int, key: int) -> bool:
+def TArraysIn(a: List[int], fromIndex: int, toIndex: int, key: int) -> bool:
     Requires(Acc(list_pred(a)))
     Requires(within(a, fromIndex, toIndex))
     Ensures(Result() == Exists(int, lambda i: fromIndex <= i and i < toIndex and a[i] == key))
@@ -46,7 +47,7 @@ def TArraysIn(a: list[int], fromIndex: int, toIndex: int, key: int) -> bool:
     return first == key or TArraysIn(a, fromIndex + 1, toIndex, key)
 
 @Pure
-def less(a: list[int], fromIndex: int, toIndex: int, key: int) -> bool:
+def less(a: List[int], fromIndex: int, toIndex: int, key: int) -> bool:
     Requires(Acc(list_pred(a)))
     Requires(within(a, fromIndex, toIndex))
     Ensures(Result() == Forall(int, lambda i: Implies(fromIndex <= i and i < toIndex, a[i] < key)))
@@ -57,7 +58,7 @@ def less(a: list[int], fromIndex: int, toIndex: int, key: int) -> bool:
     return first < key and less(a, fromIndex + 1, toIndex, key)
 
 @Pure
-def grt(a: list[int], fromIndex: int, toIndex: int, key: int) -> bool:
+def grt(a: List[int], fromIndex: int, toIndex: int, key: int) -> bool:
     Requires(Acc(list_pred(a)))
     Requires(within(a, fromIndex, toIndex))
     Ensures(Result() == Forall(int, lambda i: Implies(fromIndex <= i and i < toIndex, a[i] > key)))

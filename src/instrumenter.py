@@ -40,10 +40,10 @@ def variablePrinter(var, var_name, dtrace, list_types):
             print('comparability',type_comparability['bool'])
         elif (isinstance(var, list)):  
             print('var-kind variable\ndec-type []\nrep-type hashcode')
-            if ('list' not in type_comparability):
-                type_comparability['list'] = type_comparability['index']  
+            if ('List' not in type_comparability):
+                type_comparability['List'] = type_comparability['index']  
                 type_comparability['index'] += 1 
-            print('comparability',type_comparability['list'])
+            print('comparability',type_comparability['List'])
             if (var_name not in list_indexes):
                 list_indexes[var_name] = list_indexes['__index']
                 list_indexes['__index'] += 1
@@ -67,7 +67,7 @@ def variablePrinter(var, var_name, dtrace, list_types):
         for var in var_string.split(','):
             var_name = var.split(':')[0].strip()
             var_type = var.split(':')[1].strip()
-            if 'list' in var_type:
+            if 'List' in var_type:
                 self.status['list_types'] += f"\'{var_name}\': \'{var_type.split('[')[1].split(']')[0].strip()}\',"
             if var_name not in self.status['variables']: # sets are cool, but not ordered :/
                 self.status['variables'].append(var_name)

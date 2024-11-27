@@ -64,6 +64,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
 
     write_to_file(os.path.join(output_dir, "concolic_test_cases.txt"), str("\n".join([str(tc) for tc in test_cases])))
     print(f"Generated {test_case_count} test cases")
+    
     # print(f"Generated {len(random_test_cases)} random test cases for {entry_point_function}")
     # print(random_test_cases)
 

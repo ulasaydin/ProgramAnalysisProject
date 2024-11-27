@@ -130,7 +130,7 @@ class ConcolicTestCaseGenerator:
                 modified_concrete_state = new_symbolic_state.to_concrete_state(extended_model_with_unused_heap)
 
                 new_parent_node = str(uuid4())
-                self.dot.node(new_parent_node, label=f"Constraint: {path_constraint}, New inputs: {new_initial_inputs}") # Symbolic State: {new_symbolic_state},
+                self.dot.node(new_parent_node, label=f"Constraint: {path_constraint}, New inputs: {new_initial_inputs}, New Heap: {new_initial_heap}, Function Name: {modified_concrete_state.top_frame.function_name}, PC: {modified_concrete_state.top_frame.pc * 2}") # Symbolic State: {new_symbolic_state},
                 self.dot.edge(parent_node, new_parent_node, label=f"Branch {path_constraint}")
                 self.find_all_paths(new_parent_node, new_initial_inputs, new_initial_heap, new_symbolic_state, modified_concrete_state, new_path_constraints, max_branching_depth - 1)
             else:
