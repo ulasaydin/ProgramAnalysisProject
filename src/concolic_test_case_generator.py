@@ -51,7 +51,7 @@ class ConcolicTestCaseGenerator:
         )
         root_name = str(uuid4())
         self.dot = graphviz.Digraph("concolic-tree")
-        self.dot.node(root_name, label=f"Constraints: {[]}, Inputs: {concrete_inputs}")
+        self.dot.node(root_name, label=f"Constraints: {[]}, Inputs: {concrete_inputs}, Heap: {concrete_heap}")
         self.requested_test_case_count = test_case_count
         self.test_cases = []
         print(f"Starting concolic execution with initial random inputs: {concrete_inputs} and heap: {concrete_heap}")
@@ -140,7 +140,7 @@ class ConcolicTestCaseGenerator:
                     # we decrease depth only if there are multiple branches
                     new_parent_node = str(uuid4())
                     self.dot.node(new_parent_node,
-                                  label=f"Constraint: {path_constraint}") # Symbolic State: {new_symbolic_state},
+                                  label=f"Constraint: {path_constraint}, Function Name: {new_concrete_state.top_frame.function_name}, PC: {new_concrete_state.top_frame.pc * 2}") # Symbolic State: {new_symbolic_state},
                     self.dot.edge(parent_node, new_parent_node, label=f"chosen branch")
                     self.find_all_paths(new_parent_node, inputs, heap, new_symbolic_state, new_concrete_state, new_path_constraints, max_branching_depth - 1)
                 else:
