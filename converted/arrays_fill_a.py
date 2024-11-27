@@ -1,7 +1,8 @@
+from typing import List
 from nagini_contracts.contracts import *
 from theories.TArrays import eq
 
-def fill_a(a: list[int], val: int) -> None:
+def fill_a(a: List[int], val: int) -> None:
     Requires(Acc(list_pred(a)))
     Ensures(Acc(list_pred(a)))
     Ensures(eq(a, 0, len(a), val))

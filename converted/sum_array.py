@@ -1,8 +1,9 @@
+from typing import List
 from nagini_contracts.contracts import *
 from theories.TArrays import within
 
 @Pure
-def sum_pure(a: list[int], fromIndex: int, toIndex: int) -> int:
+def sum_pure(a: List[int], fromIndex: int, toIndex: int) -> int:
     Requires(Acc(list_pred(a)))
     Requires(len(a) > 0)
     Requires(within(a, fromIndex, toIndex))
@@ -11,11 +12,11 @@ def sum_pure(a: list[int], fromIndex: int, toIndex: int) -> int:
         return 0
     return a[toIndex - 1] + sum_pure(a, fromIndex, toIndex - 1)
 
-def check_preconditions(a: list[int]) -> None:
+def check_preconditions(a: List[int]) -> None:
     if len(a) == 0:
         raise RuntimeError("Precondition failed: len(a) > 0")
 
-def sum_list(a: list[int]) -> int:
+def sum_list(a: List[int]) -> int:
     Requires(Acc(list_pred(a)))
     Requires(len(a) > 0)
     Ensures(Acc(list_pred(a)))

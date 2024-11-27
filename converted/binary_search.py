@@ -1,14 +1,15 @@
+from typing import List
 from nagini_contracts.contracts import *
 from theories.TArrays import sorted, within, TArraysIn, less, grt
 
 
-def check_preconditions(a: list[int], fromIndex: int, toIndex: int, key: int) -> None:
+def check_preconditions(a: List[int], fromIndex: int, toIndex: int, key: int) -> None:
     if not within(a, fromIndex, toIndex):
         raise RuntimeError("Precondition failed: within(a, fromIndex, toIndex)")
     if not sorted(a, fromIndex, toIndex):
         raise RuntimeError("Precondition failed: sorted(a, fromIndex, toIndex)")
 
-def binary_search(a: list[int], fromIndex: int, toIndex: int, key: int) -> int:
+def binary_search(a: List[int], fromIndex: int, toIndex: int, key: int) -> int:
     Requires(Acc(list_pred(a)))
     Requires(within(a, fromIndex, toIndex))
     Requires(sorted(a, fromIndex, toIndex))

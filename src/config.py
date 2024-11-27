@@ -8,6 +8,9 @@ TEST_CASES = [
     ("../converted/min_array.py", "min_list"),
     ("../converted/sum_one_to_n.py", "sum_one_to_n"),
     ("../converted/arrays_hashCode_a.py", "hashCode_a"),
+    ("../converted/square.py", "square"),
+    ("../converted/cube.py", "cube"),
+    ("../converted/linear_search.py", "search"),
 ]
 APP_NAME = "LoopInvariantFinder"
 APP_AUTHOR = "SECCLO"

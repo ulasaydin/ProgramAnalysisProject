@@ -1,0 +1,41 @@
+{
+  "name": "Python Dev Container",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": {
+      "BUILDKIT_INLINE_CACHE": "0"
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "vscode",
+      "userUid": "1000",
+      "userGid": "1000"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.formatOnSave": false
+        },
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/bin/bash"
+          }
+        }
+      }
+    }
+  },
+  "remoteUser": "vscode",
+  "postCreateCommand": "find /workspaces/ProgramAnalysisProject/tests /workspaces/ProgramAnalysisProject/src -type d -name '__pycache__' -exec rm -rf {} +"
+}

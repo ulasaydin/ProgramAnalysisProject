@@ -1,6 +1,6 @@
 import pytest
 
-from src.interpreter import Python39Interpreter
+from src.interpreter import Python39Interpreter, InterpreterError
 from tests.common import get_function_bytecode
 
 
@@ -50,5 +50,5 @@ def test_min_list_duplicates():
 
 
 def test_min_list_empty():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(InterpreterError):
         i.run([[]])

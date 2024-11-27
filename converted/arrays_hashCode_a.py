@@ -1,6 +1,7 @@
+from typing import List
 from nagini_contracts.contracts import *
 
-def hashCode_a(a: list[int]) -> int:
+def hashCode_a(a: List[int]) -> int:
     Requires(Acc(list_pred(a)))
 
     result = 1

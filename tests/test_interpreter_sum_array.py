@@ -1,6 +1,6 @@
 import pytest
 
-from src.interpreter import Python39Interpreter
+from src.interpreter import Python39Interpreter, InterpreterError
 from tests.common import get_function_bytecode
 
 
@@ -62,5 +62,5 @@ def test_sum_list_b():
 
 
 def test_sum_list_empty_list():
-    with pytest.raises(RuntimeError):
+    with pytest.raises(InterpreterError):
         i_list.run([[]])

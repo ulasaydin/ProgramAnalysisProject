@@ -1,8 +1,9 @@
+from typing import List
 from nagini_contracts.contracts import *
 from theories.TArrays import within
 
 @Pure
-def eq(a: list[int], aFrom: int, aTo: int, b: list[int], bFrom: int, bTo: int) -> bool:
+def eq(a: List[int], aFrom: int, aTo: int, b: List[int], bFrom: int, bTo: int) -> bool:
     Requires(Acc(list_pred(a)))
     Requires(Acc(list_pred(b)))
     Requires(within(a, aFrom, aTo))
@@ -17,7 +18,7 @@ def eq(a: list[int], aFrom: int, aTo: int, b: list[int], bFrom: int, bTo: int) -
         else:
             return (a[aFrom] == b[bFrom]) and eq(a, aFrom + 1, aTo, b, bFrom + 1, bTo)
 
-def equals(a: list[int], a2: list[int]) -> bool:
+def equals(a: List[int], a2: List[int]) -> bool:
     Requires(Acc(list_pred(a)) and Implies(a != a2, Acc(list_pred(a2))))
     Ensures(Acc(list_pred(a)) and Implies(Old(a) != Old(a2), Acc(list_pred(a2))))
     Ensures(Result() == (Old(a) == Old(a2) or eq(a, 0, len(a), a2, 0, len(a2))))
@@ -35,7 +36,10 @@ def equals(a: list[int], a2: list[int]) -> bool:
         Invariant(Acc(list_pred(a)))
         Invariant(Acc(list_pred(a2)))
         Invariant(0 <= ic and ic <= l)
-        Invariant(l == Old(len(a)))
+        Invariant(l == len(a))
+        Invariant(l == len(a2))
+        Invariant(len(a) == Old(len(a)))
+        Invariant(len(a2) == Old(len(a2)))
         Invariant(eq(a, 0, ic, a2, 0, ic))
 
         if a[ic] != a2[ic]:
