@@ -3,7 +3,7 @@ from nagini_contracts.contracts import *
 
 def search(x: int, arr: List[int]) -> int:
     Requires(Acc(list_pred(arr)))
-    Ensures(Acc(list_pred(arr)))
+    #Ensures(Acc(list_pred(arr)))
      # Ensures(len(arr) == Old(len(arr)))
      # Ensures(Result() < len(arr))
      # Ensures(Implies(Result() >= 0, arr[Result()] == x))

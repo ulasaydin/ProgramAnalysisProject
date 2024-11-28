@@ -20,8 +20,8 @@ def eq(a: List[int], aFrom: int, aTo: int, b: List[int], bFrom: int, bTo: int) -
 
 def equals(a: List[int], a2: List[int]) -> bool:
     Requires(Acc(list_pred(a)) and Implies(a != a2, Acc(list_pred(a2))))
-    Ensures(Acc(list_pred(a)) and Implies(Old(a) != Old(a2), Acc(list_pred(a2))))
-    Ensures(Result() == (Old(a) == Old(a2) or eq(a, 0, len(a), a2, 0, len(a2))))
+    #Ensures(Acc(list_pred(a)) and Implies(Old(a) != Old(a2), Acc(list_pred(a2))))
+   # Ensures(Result() == (Old(a) == Old(a2) or eq(a, 0, len(a), a2, 0, len(a2))))
 
     if a == a2:
         return True

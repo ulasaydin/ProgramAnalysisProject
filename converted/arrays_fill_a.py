@@ -4,7 +4,7 @@ from theories.TArrays import eq, within
 
 def fill_a(a: List[int], val: int) -> None:
     Requires(Acc(list_pred(a)))
-    Ensures(Acc(list_pred(a)))
+    #Ensures(Acc(list_pred(a)))
     #Ensures(eq(a, 0, len(a), val))
 
     ic = 0

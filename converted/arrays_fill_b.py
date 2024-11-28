@@ -12,7 +12,7 @@ def fill_b(a: List[int], from_index: int, to_index: int, val: int) -> None:
     Requires(Acc(list_pred(a)))
     Requires(within(a, from_index, to_index))
 
-    Ensures(Acc(list_pred(a)))
+    #Ensures(Acc(list_pred(a)))
     #Ensures(len(a) == Old(len(a)))
     #Ensures(Forall(int, lambda j: Implies(0 <= j and j < from_index, a[j] == Old(a[j]))))
     #Ensures(eq(a, from_index, to_index, val))

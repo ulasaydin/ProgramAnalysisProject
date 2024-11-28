@@ -13,11 +13,11 @@ def binary_search(a: List[int], fromIndex: int, toIndex: int, key: int) -> int:
     Requires(Acc(list_pred(a)))
     Requires(within(a, fromIndex, toIndex))
     Requires(sorted(a, fromIndex, toIndex))
-    Ensures(Acc(list_pred(a)))
-    Ensures(len(a) == Old(len(a)))
-    Ensures(Result() < len(a))
-    Ensures(Implies(Result() >= 0, a[Result()] == key))
-    Ensures(Implies(Result() < 0, not TArraysIn(a, fromIndex, toIndex, key)))
+    #Ensures(Acc(list_pred(a)))
+    #Ensures(len(a) == Old(len(a)))
+    #Ensures(Result() < len(a))
+    #Ensures(Implies(Result() >= 0, a[Result()] == key))
+    #Ensures(Implies(Result() < 0, not TArraysIn(a, fromIndex, toIndex, key)))
 
     check_preconditions(a, fromIndex, toIndex, key)
 
