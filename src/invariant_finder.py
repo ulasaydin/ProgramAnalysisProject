@@ -20,7 +20,16 @@ from instrumenter import Instrumenter
 from concolic_test_case_generator import ConcolicTestCaseGenerator
 from util import write_to_file, extract_functions, function_ast_to_bytecode
 
-
+def get_invariant_errors_line_numbers(nagini_output):
+    lines = nagini_output.split('\n')
+    reached_error_lines = False
+    for line in lines:
+        if line == "Errors:":
+            reached_error_lines = True
+        elif reached_error_lines:
+            if "Loop invariant" in line:
+                return int(line.split(":")[1])
+    return None
 
 def find_invariants(program_file_path: str, entry_point_function: str, output_dir: str):
     print(f"Finding invariants for {entry_point_function} in {program_file_path}:")
@@ -132,16 +141,10 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
         for invariant in nagini_invariants:
             nagini_file.write(f"{invariant}\n")
     print(f"Invariants saved to {nagini_output_path}")
-
-    # TODO: (Jimena) Insert invariant annotations in program ast
-
     output_program_path = os.path.join(output_dir, f"{os.path.basename( program_file_path).replace('.py', '_with_invariants.py')}")
     annotated_program = insert_invariants_in_ast(functions_in_order, entry_point_function, nagini_invariants)
     write_to_file(output_program_path, annotated_program)
     print(f"Invariants inserted into the AST in {output_program_path}")
-
-
-    # TODO: Output program with invariants to output directory
     while 1:
         # TODO: (Ulas) Run Nagini on the annotated program to check invariants
         print("Running Nagini to verify the annotated program...")
@@ -157,7 +160,11 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
             print(nagini_result.stdout)
             print("Standard Error:")
             print(nagini_result.stderr)
-            invalid_invariant_line_number = int(nagini_result.stdout.split(':')[2])
+            invalid_invariant_line_number = get_invariant_errors_line_numbers(nagini_result.stdout)
+            if invalid_invariant_line_number is None:
+                print("Could not find valid invariants")
+                print("---")
+                break
             remover = InvariantRemover(entry_point_function, invalid_invariant_line_number)
             new_tree = remover.visit(ast.parse(annotated_program))
             annotated_program = ast.unparse(new_tree)
