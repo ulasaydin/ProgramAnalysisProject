@@ -2,13 +2,13 @@
 
 |    Program    | Required invariants |
 |---------------|---------------------|
-| arrays_fill_a | 2/3 |
-| hashCode_a    | 3/3 |
+| arrays_fill_a | 3/4 |
+| hashCode_a    | 2/3 |
 | max_array     | 2/3 |
 | min_array     | 2/3 |
 | sum_one_to_n  | 1/2 |
-| sum_array     | 3/4 |
-| linear_search | 4/5 |
+| sum_array     | 2/4 |
+| linear_search | 3/5 |
 | square        | 2/2 |
 | cube          | 2/3 |
 
