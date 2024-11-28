@@ -203,7 +203,7 @@ def variablePrinter(var, var_name, dtrace, list_types):
             for var_name in self.status['variables']:
                 self.fout.write('\t'*self.status['depth']+f'variablePrinter({var_name},\'{var_name}\',True,list_types)\n')   #var value
             self.status['iter_invariant_stack'].pop()
-
+        self.status['depth'] -= 1
         while self.status['loop_invariant_stack']:
             self.fout.write('\n'+'\t'*self.status['depth']+f"print('\\n{self.status['loop_invariant_stack'][-1]}:::EXIT{self.status['exit_counter']}') \n")
             for var_name in self.status['variables']:
