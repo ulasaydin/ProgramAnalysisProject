@@ -177,7 +177,7 @@ def extend_model_with_inputs(solver: z3.Solver, model: z3.ModelRef, inputs: dict
     return new_model
 
 def extend_model_with_heap(solver: z3.Solver, model: z3.ModelRef, symbolic_to_concrete_heap: dict[int, int], symbolic_heap: dict[int, SymbolicIntegerArray], concrete_heap: dict[int, list[int]]) -> z3.ModelRef:
-    #print("Initial model", model)
+    print("Initial model", model)
     for heap_ref, symbolic_array in symbolic_heap.items():
         concrete_array = concrete_heap[symbolic_to_concrete_heap[heap_ref]]
         for i, v in symbolic_array.variables.items():
@@ -189,7 +189,7 @@ def extend_model_with_heap(solver: z3.Solver, model: z3.ModelRef, symbolic_to_co
                     solver.add(v == concrete_array[i])
     solver.check()
     new_model = solver.model()
-    #print("Extended model", new_model)
+    print("Extended model", new_model)
     return new_model
 
 def test_case_from_inputs_and_heap(inputs: list[Any], heap: dict[int, SymbolicIntegerArray]) -> list[Any]:

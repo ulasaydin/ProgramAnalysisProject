@@ -1,6 +1,7 @@
 import ast
 from dataclasses import dataclass
 from math import e
+import random
 from typing import Any, Union
 from uuid import uuid4
 import graphviz
@@ -9,11 +10,10 @@ import z3
 import sys
 import os
 
-sys.path.append(os.path.dirname(__file__))
-
+from model_wrapper import ModelWrapper
 from interpreter import InterpreterError
 from interpreter import ProgramState, Python39Interpreter
-from util import extend_model_with_heap, extend_model_with_inputs, extract_arguments_and_annotations, test_case_from_inputs_and_heap, types_to_concrete_inputs_and_heap, types_to_symbolic_inputs_and_heap
+from util import extend_model_with_heap, extend_model_with_inputs, extract_arguments_and_annotations, generate_random_value, test_case_from_inputs_and_heap, types_to_concrete_inputs_and_heap, types_to_symbolic_inputs_and_heap
 from symbolic_interpreter import SymbolicInterpreter, SymbolicProgramState
 from symbolic_integer_array import HeapReference, SymbolicIntegerArray
 
@@ -55,10 +55,10 @@ class ConcolicTestCaseGenerator:
         self.requested_test_case_count = test_case_count
         self.test_cases = []
         print(f"Starting concolic execution with initial random inputs: {concrete_inputs} and heap: {concrete_heap}")
-        self.find_all_paths(root_name, concrete_inputs, concrete_heap, initial_symbolic_state, initial_concrete_state, [], max_branching_depth=10)
+        self.find_all_paths(root_name, concrete_inputs, concrete_heap, initial_symbolic_state, initial_concrete_state, [], max_branching_depth=20)
         return self.test_cases
 
-    def evaluate_arguments_in_model(self, model: z3.ModelRef) -> list[tuple[str, Any]]:
+    def evaluate_arguments_in_model(self, model: ModelWrapper) -> list[tuple[str, Any]]:
         new_inputs = []
         for argument in self.symbolic_arguments:
             if isinstance(argument, HeapReference):
@@ -67,13 +67,20 @@ class ConcolicTestCaseGenerator:
             concrete_value = model.evaluate(argument)
             if z3.is_int_value(concrete_value):
                 new_inputs.append(concrete_value.as_long())
-            elif z3.is_bool(concrete_value):
+            elif z3.is_true(concrete_value) or z3.is_false(concrete_value):
                 new_inputs.append(z3.is_true(concrete_value))
             else:
-                raise NotImplementedError(f"Unsupported z3 type {type(concrete_value)}")
+                if z3.is_int(concrete_value):
+                    random_value = generate_random_value('int')
+                    new_inputs.append(random_value)
+                    model.add(argument == random_value)
+                elif z3.is_bool(concrete_value):
+                    random_value = generate_random_value('bool')
+                    new_inputs.append(random_value)
+                    model.add(argument == random_value)
         return new_inputs
     
-    def evaluate_heap_in_model(self, model: z3.ModelRef, heap: dict[int, SymbolicIntegerArray]) -> dict[int, list[int]]:
+    def evaluate_heap_in_model(self, model: ModelWrapper, heap: dict[int, SymbolicIntegerArray]) -> dict[int, list[int]]:
         new_heap = {}
         for heap_ref in self.symbolic_heap.keys():
             heap_val = heap[heap_ref]
@@ -88,7 +95,7 @@ class ConcolicTestCaseGenerator:
             return
 
         if concrete_state.done:
-            print("Found test case", inputs, heap)
+            #print("Found test case", inputs, heap)
             # we have reached the end of the program without raising an exception
             self.test_cases.append(test_case_from_inputs_and_heap(inputs, heap))
             return
@@ -100,6 +107,7 @@ class ConcolicTestCaseGenerator:
 
         for i, branch in enumerate(possible_branches):
             new_symbolic_state, path_constraint = branch
+            path_constraint_str = str(path_constraint)[:1000] #.replace('\n', '').replace('\'', '').replace('\"', '')
             if i != chosen_branch:
                 # we need to find a concrete state because we are not following the concrete execution
                 new_path_constraints = path_constraints + [path_constraint]
@@ -117,21 +125,25 @@ class ConcolicTestCaseGenerator:
                 #print(f"Branching {new_symbolic_state}")
                 
                 # merge the unused inputs with the model
-                old_inputs_dict = dict(zip(self.symbolic_arguments, inputs))
-                extended_model_with_all_inputs = extend_model_with_inputs(solver, model, old_inputs_dict)
-                new_initial_inputs = self.evaluate_arguments_in_model(extended_model_with_all_inputs)
+                #old_inputs_dict = dict(zip(self.symbolic_arguments, inputs))
+                #extended_model_with_all_inputs = extend_model_with_inputs(solver, model, old_inputs_dict)
+                #new_initial_inputs = self.evaluate_arguments_in_model(extended_model_with_all_inputs)
 
                 # merge the unused heap locations with the model
-                symbolic_to_concrete_heap = {symbolic_heap_ref.address: concrete_heap_ref.address for symbolic_heap_ref, concrete_heap_ref in old_inputs_dict.items() if isinstance(symbolic_heap_ref, HeapReference)}
-                extended_model_with_unused_heap = extend_model_with_heap(solver, extended_model_with_all_inputs, symbolic_to_concrete_heap, new_symbolic_state.heap, heap)
-                new_initial_heap = self.evaluate_heap_in_model(extended_model_with_unused_heap, new_symbolic_state.heap)
+                #symbolic_to_concrete_heap = {symbolic_heap_ref.address: concrete_heap_ref.address for symbolic_heap_ref, concrete_heap_ref in old_inputs_dict.items() if isinstance(symbolic_heap_ref, HeapReference)}
+                #extended_model_with_unused_heap = extend_model_with_heap(solver, extended_model_with_all_inputs, symbolic_to_concrete_heap, new_symbolic_state.heap, heap)
+                #new_initial_heap = self.evaluate_heap_in_model(extended_model_with_unused_heap, new_symbolic_state.heap)
 
                 # make the symbolic state concrete using the extended model
-                modified_concrete_state = new_symbolic_state.to_concrete_state(extended_model_with_unused_heap)
+                m = ModelWrapper(model, solver)
+                new_initial_inputs = self.evaluate_arguments_in_model(m)
+                new_initial_heap = self.evaluate_heap_in_model(m, new_symbolic_state.heap)
+                modified_concrete_state = new_symbolic_state.to_concrete_state(m)
 
                 new_parent_node = str(uuid4())
-                self.dot.node(new_parent_node, label=f"Constraint: {path_constraint}, New inputs: {new_initial_inputs}, New Heap: {new_initial_heap}, Function Name: {modified_concrete_state.top_frame.function_name}, PC: {modified_concrete_state.top_frame.pc * 2}") # Symbolic State: {new_symbolic_state},
-                self.dot.edge(parent_node, new_parent_node, label=f"Branch {path_constraint}")
+                str
+                self.dot.node(new_parent_node, label=f"Constraint: {path_constraint_str}, New inputs: {str(test_case_from_inputs_and_heap(new_initial_inputs, new_initial_heap))[:1000]}, Function Name: {modified_concrete_state.top_frame.function_name}, PC: {modified_concrete_state.top_frame.pc * 2}") # Symbolic State: {new_symbolic_state},
+                self.dot.edge(parent_node, new_parent_node, label=f"Branch {path_constraint_str}")
                 self.find_all_paths(new_parent_node, new_initial_inputs, new_initial_heap, new_symbolic_state, modified_concrete_state, new_path_constraints, max_branching_depth - 1)
             else:
                 # we can keep following the concrete execution because we have the concrete state from
@@ -140,7 +152,7 @@ class ConcolicTestCaseGenerator:
                     # we decrease depth only if there are multiple branches
                     new_parent_node = str(uuid4())
                     self.dot.node(new_parent_node,
-                                  label=f"Constraint: {path_constraint}, Function Name: {new_concrete_state.top_frame.function_name}, PC: {new_concrete_state.top_frame.pc * 2}") # Symbolic State: {new_symbolic_state},
+                                  label=f"Constraint: {path_constraint_str}, Function Name: {new_concrete_state.top_frame.function_name}, PC: {new_concrete_state.top_frame.pc * 2}") # Symbolic State: {new_symbolic_state},
                     self.dot.edge(parent_node, new_parent_node, label=f"chosen branch")
                     self.find_all_paths(new_parent_node, inputs, heap, new_symbolic_state, new_concrete_state, new_path_constraints, max_branching_depth - 1)
                 else:

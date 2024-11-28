@@ -131,7 +131,7 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     output_program_path = os.path.join(output_dir, f"{os.path.basename( program_file_path).replace('.py', '_with_invariants.py')}")
     insert_invariants_in_ast(
         program_file_path, nagini_invariants, output_program_path)
-    print(f"Invariants inserted into the AST in {output_program_path}");
+    print(f"Invariants inserted into the AST in {output_program_path}")
 
     # TODO: Output program with invariants to output directory
 
