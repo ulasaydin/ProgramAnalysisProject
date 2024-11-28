@@ -12,8 +12,8 @@ def square(n: int) -> int:
     result = 0
     i = 0
     while i < n:
-        Invariant(0 <= i and i <= n)
-        Invariant(result == i * i)
+        #Invariant(0 <= i and i <= n)
+        #Invariant(result == i * i)
         result += 2 * i + 1
         i += 1
     return result

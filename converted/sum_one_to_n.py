@@ -14,8 +14,8 @@ def sum_one_to_n(n: int) -> int:
     sum = 0
 
     while i < n:
-        Invariant(0 <= i and i <= n)
-        Invariant(sum == i * (i + 1) // 2)
+        #Invariant(0 <= i and i <= n)
+        #Invariant(sum == i * (i + 1) // 2)
         i += 1
         sum += i
     

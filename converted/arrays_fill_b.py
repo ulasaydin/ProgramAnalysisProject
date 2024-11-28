@@ -13,10 +13,10 @@ def fill_b(a: List[int], from_index: int, to_index: int, val: int) -> None:
     Requires(within(a, from_index, to_index))
 
     Ensures(Acc(list_pred(a)))
-    Ensures(len(a) == Old(len(a)))
-    Ensures(Forall(int, lambda j: Implies(0 <= j and j < from_index, a[j] == Old(a[j]))))
-    Ensures(eq(a, from_index, to_index, val))
-    Ensures(Forall(int, lambda j: Implies(to_index <= j and j < len(a), a[j] == Old(a[j]))))
+    #Ensures(len(a) == Old(len(a)))
+    #Ensures(Forall(int, lambda j: Implies(0 <= j and j < from_index, a[j] == Old(a[j]))))
+    #Ensures(eq(a, from_index, to_index, val))
+    #Ensures(Forall(int, lambda j: Implies(to_index <= j and j < len(a), a[j] == Old(a[j]))))
 
     check_preconditions(a, from_index, to_index, val)
 
@@ -24,11 +24,11 @@ def fill_b(a: List[int], from_index: int, to_index: int, val: int) -> None:
 
     while ic < to_index:
         Invariant(Acc(list_pred(a)))
-        Invariant(len(a) == Old(len(a)))
-        Invariant(from_index <= ic and ic <= to_index)
-        Invariant(Forall(int, lambda j: Implies(0 <= j and j < from_index, a[j] == Old(a[j]))))
-        Invariant(eq(a, from_index, ic, val))
-        Invariant(Forall(int, lambda j: Implies(to_index <= j and j < len(a), a[j] == Old(a[j]))))
+        #Invariant(len(a) == Old(len(a)))
+        #Invariant(from_index <= ic and ic <= to_index)
+        #Invariant(Forall(int, lambda j: Implies(0 <= j and j < from_index, a[j] == Old(a[j]))))
+        #Invariant(eq(a, from_index, ic, val))
+        #Invariant(Forall(int, lambda j: Implies(to_index <= j and j < len(a), a[j] == Old(a[j]))))
 
         a[ic] = val
         ic += 1

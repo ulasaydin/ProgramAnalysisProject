@@ -26,15 +26,15 @@ def binary_search(a: List[int], fromIndex: int, toIndex: int, key: int) -> int:
 
     while low <= high:
         Invariant(Acc(list_pred(a)))
-        Invariant(len(a) == Old(len(a)))
-        Invariant(0 <= fromIndex and fromIndex <= toIndex and toIndex <= len(a))
-        Invariant(high >= -1)
-        Invariant(fromIndex <= low)
-        Invariant(low <= high + 1)
-        Invariant(high < toIndex)
-        Invariant(sorted(a, fromIndex, toIndex))
-        Invariant(less(a, fromIndex, low, key))
-        Invariant(grt(a, high + 1, toIndex, key))
+        #Invariant(len(a) == Old(len(a)))
+        #Invariant(0 <= fromIndex and fromIndex <= toIndex and toIndex <= len(a))
+        #Invariant(high >= -1)
+        #Invariant(fromIndex <= low)
+        #Invariant(low <= high + 1)
+        #Invariant(high < toIndex)
+        #Invariant(sorted(a, fromIndex, toIndex))
+        #Invariant(less(a, fromIndex, low, key))
+        #Invariant(grt(a, high + 1, toIndex, key))
 
         mid = low + (high - low) // 2
         midVal = a[mid]

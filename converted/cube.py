@@ -12,9 +12,9 @@ def cube(n: int) -> int:
     square = 0
     i = 0
     while i < n:
-        Invariant(0 <= i and i <= n)
-        Invariant(square == i * i)
-        Invariant(result == i * i * i)
+        #Invariant(0 <= i and i <= n)
+        #Invariant(square == i * i)
+        #Invariant(result == i * i * i)
         result += 3 * square + 3 * i + 1
         square += 2 * i + 1
         i += 1

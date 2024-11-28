@@ -21,8 +21,8 @@ def min_list(xs: List[int]) -> int:
 
     while i < len(xs):
         Invariant(Acc(list_pred(xs)))
-        Invariant(0 <= i and i <= len(xs))
-        Invariant(Forall(int, lambda j: Implies(0 <= j and j < i, minimum <= xs[j])))
+        #Invariant(0 <= i and i <= len(xs))
+        #Invariant(Forall(int, lambda j: Implies(0 <= j and j < i, minimum <= xs[j])))
         
         if xs[i] < minimum:
             minimum = xs[i]

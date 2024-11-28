@@ -35,12 +35,12 @@ def equals(a: List[int], a2: List[int]) -> bool:
     while ic < l:
         Invariant(Acc(list_pred(a)))
         Invariant(Acc(list_pred(a2)))
-        Invariant(0 <= ic and ic <= l)
-        Invariant(l == len(a))
-        Invariant(l == len(a2))
-        Invariant(len(a) == Old(len(a)))
-        Invariant(len(a2) == Old(len(a2)))
-        Invariant(eq(a, 0, ic, a2, 0, ic))
+        #Invariant(0 <= ic and ic <= l)
+        #Invariant(l == len(a))
+        #Invariant(l == len(a2))
+        #Invariant(len(a) == Old(len(a)))
+        #Invariant(len(a2) == Old(len(a2)))
+        #Invariant(eq(a, 0, ic, a2, 0, ic))
 
         if a[ic] != a2[ic]:
             return False

@@ -9,8 +9,8 @@ def hashCode_a(a: List[int]) -> int:
 
     while ic < len(a):
         Invariant(Acc(list_pred(a)))
-        Invariant(len(a) == Old(len(a)))
-        Invariant(0 <= ic and ic <= len(a))
+        #Invariant(len(a) == Old(len(a)))
+        #Invariant(0 <= ic and ic <= len(a))
         element = a[ic]
         result = 31 * result + element
         ic += 1

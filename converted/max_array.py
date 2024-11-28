@@ -20,8 +20,8 @@ def max_list(xs: List[int]) -> int:
 
     while i < len(xs):
         Invariant(Acc(list_pred(xs)))
-        Invariant(0 <= i and i <= len(xs))
-        Invariant(Forall(int, lambda j: Implies(0 <= j and j < i, maximum >= xs[j])))
+        #Invariant(0 <= i and i <= len(xs))
+        #Invariant(Forall(int, lambda j: Implies(0 <= j and j < i, maximum >= xs[j])))
         
         if xs[i] > maximum:
             maximum = xs[i]

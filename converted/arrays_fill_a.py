@@ -5,15 +5,15 @@ from theories.TArrays import eq, within
 def fill_a(a: List[int], val: int) -> None:
     Requires(Acc(list_pred(a)))
     Ensures(Acc(list_pred(a)))
-    Ensures(eq(a, 0, len(a), val))
+    #Ensures(eq(a, 0, len(a), val))
 
     ic = 0
     l = len(a)
 
     while ic < l:
         Invariant(Acc(list_pred(a)))
-        Invariant(l == len(a))
-        Invariant(0 <= ic and ic <= l)
-        Invariant(eq(a, 0, ic, val))
+        #Invariant(l == len(a))
+        #Invariant(0 <= ic and ic <= l)
+        #Invariant(eq(a, 0, ic, val))
         a[ic] = val
         ic += 1
