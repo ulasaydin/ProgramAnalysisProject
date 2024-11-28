@@ -23,8 +23,12 @@ class InvariantInserter(ast.NodeTransformer):
         for invariant in self.invariants:
             if invariant.startswith("Invariant(") and invariant.endswith(")"):
                 invariant_content = invariant[len("Invariant("):-1] 
+
+                if '**' in invariant_content:
+                    continue
+
                 try:
-                 
+                    # Try to parse the invariant using AST
                     parsed_invariant = ast.parse(f"Invariant({invariant_content})").body[0].value
                     updated_body.insert(len(existing_invariants), ast.Expr(value=parsed_invariant))
                 except SyntaxError as e:
@@ -41,6 +45,7 @@ class InvariantInserter(ast.NodeTransformer):
             if isinstance(child, (ast.For, ast.While)):
                 node.body[i] = self.insert_invariants_in_loop(child)
         return node
+
 
 def insert_invariants_in_ast(
         functions: list[tuple[str, ast.FunctionDef]], 

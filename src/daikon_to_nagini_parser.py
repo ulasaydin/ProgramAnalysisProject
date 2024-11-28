@@ -1,23 +1,27 @@
 import re
 
 def parse_daikon_output(daikon_output):
- 
     invariants = []
 
     def process_line(line):
-        """
-        Process a single line of Daikon output and convert it to Nagini-compatible format.
-        """
-        # Replace `orig` with `Old`
-        line = line.replace("orig(", "Old(").replace(")", ")")
+   
+        line = re.sub(r"(Old\(\w+\))\s*\*\*\s*(\d+)", r"\1 * \1", line)  
+        line = re.sub(r"(\w+)\s*\*\*\s*(\d+)", r"\1 * \1", line) 
 
-        # Replace `size(array[])` with `len(array)`
-        line = line.replace("size(", "len(").replace("[])", ")")
+        # Handle cases like `a[] == orig(a[])` and convert it to Forall...
+        if re.search(r"\w+\[\] == orig\(\w+\[\]\)", line):
+            match = re.match(r"(\w+)\[\] == orig\((\w+)\[\]\)", line)
+            if match:
+                array_name = match.group(1)
+                return f"Forall(int, lambda i: Implies(0 <= i and i < len({array_name}), {array_name}[i] == Old({array_name}[i])))"
 
-        # Convert `null` to `None`
-        line = line.replace("null", "None")
+        # Handle cases like `a == orig(a)` and convert it to Old(a)
+        if re.search(r"\w+ == orig\(\w+\)", line):
+            match = re.match(r"(\w+) == orig\((\w+)\)", line)
+            if match:
+                return f"Invariant({match.group(1)} == Old({match.group(1)}))"
 
-        # Handle "one of {}" by converting to or
+        # Handle "one of {}" and convert it to or conditions
         if "one of {" in line:
             match = re.search(r"(\w+)\s+one\s+of\s+\{(.+?)\}", line)
             if match:
@@ -27,17 +31,20 @@ def parse_daikon_output(daikon_output):
                 conditions = " or ".join(f"{variable} == {value}" for value in values)
                 return f"Invariant({conditions})"
 
-        # Handle `sorted(reverse=True)`
-        if "sorted(reverse=True)" in line:
-            return f"Invariant({line.strip()})"
-
-        # Wrap mathematical and logical operations in `Invariant()` if not already wrapped
-        if any(op in line for op in ["==", "!=", ">=", "<=", ">", "<", "%", "**", "-", "+"]):
+        # Handle "has only one value"
+        if "has only one value" in line:
             if not line.startswith("Invariant("):
                 return f"Invariant({line.strip()})"
 
-        # Handle "has only one value"
-        if "has only one value" in line:
+        # Replace `orig()` with `Old()`
+        line = line.replace("orig(", "Old(").replace(")", ")")
+        # Replace `size()` with `len()`
+        line = line.replace("size(", "len(").replace("[])", ")")
+        # Convert `null` to `None`
+        line = line.replace("null", "None")
+
+        
+        if any(op in line for op in ["==", "!=", ">=", "<=", ">", "<", "%", "-", "+", "**"]):
             if not line.startswith("Invariant("):
                 return f"Invariant({line.strip()})"
 
