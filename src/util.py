@@ -164,34 +164,6 @@ def types_to_concrete_inputs_and_heap(arguments: list[tuple[str, Any]]) -> tuple
             raise NotImplementedError(f"Unsupported type annotation {annotation}")
     return concrete_arguments, concrete_heap
 
-def extend_model_with_inputs(solver: z3.Solver, model: z3.ModelRef, inputs: dict[Union[z3.ExprRef, HeapReference], Any]) -> z3.ModelRef:
-    #print("Initial model", model)
-    for e, v in inputs.items():
-        if isinstance(e, HeapReference):
-            continue
-        if model[e] is None:
-            solver.add(e == v)
-    solver.check()
-    new_model = solver.model()
-    #print("Extended model", new_model)
-    return new_model
-
-def extend_model_with_heap(solver: z3.Solver, model: z3.ModelRef, symbolic_to_concrete_heap: dict[int, int], symbolic_heap: dict[int, SymbolicIntegerArray], concrete_heap: dict[int, list[int]]) -> z3.ModelRef:
-    print("Initial model", model)
-    for heap_ref, symbolic_array in symbolic_heap.items():
-        concrete_array = concrete_heap[symbolic_to_concrete_heap[heap_ref]]
-        for i, v in symbolic_array.variables.items():
-            if model[v] is None:
-                i = model.evaluate(i)
-                if z3.is_int_value(i):
-                    i = i.as_long()
-                    #print("Adding constraint", v == concrete_array[i])
-                    solver.add(v == concrete_array[i])
-    solver.check()
-    new_model = solver.model()
-    print("Extended model", new_model)
-    return new_model
-
 def test_case_from_inputs_and_heap(inputs: list[Any], heap: dict[int, SymbolicIntegerArray]) -> list[Any]:
     test_case = []
     for input_ in inputs:

@@ -13,7 +13,7 @@ import os
 from model_wrapper import ModelWrapper
 from interpreter import InterpreterError
 from interpreter import ProgramState, Python39Interpreter
-from util import extend_model_with_heap, extend_model_with_inputs, extract_arguments_and_annotations, generate_random_value, test_case_from_inputs_and_heap, types_to_concrete_inputs_and_heap, types_to_symbolic_inputs_and_heap
+from util import extract_arguments_and_annotations, generate_random_value, test_case_from_inputs_and_heap, types_to_concrete_inputs_and_heap, types_to_symbolic_inputs_and_heap
 from symbolic_interpreter import SymbolicInterpreter, SymbolicProgramState
 from symbolic_integer_array import HeapReference, SymbolicIntegerArray
 
@@ -43,7 +43,7 @@ class ConcolicTestCaseGenerator:
             concrete_inputs,
             concrete_heap
         )
-        initial_symbolic_state = SymbolicProgramState.generate_symbolic_state_from_arguments_and_bytecode(
+        initial_symbolic_state = SymbolicProgramState.generate_program_state_from_arguments_and_bytecode(
             self.entry_point,
             entry_point_function_bytecode,
             self.symbolic_arguments,
