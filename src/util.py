@@ -14,13 +14,13 @@ sys.path.append(os.path.dirname(__file__))
 from symbolic_integer_array import SymbolicIntegerArray, HeapReference
 
 
-def extract_functions(program_root: ast.Module, program_file_path: str) -> dict[str, ast.FunctionDef]:
-    functions : dict[str, ast.FunctionDef] = dict()
+def extract_functions(program_root: ast.Module, program_file_path: str) -> list[tuple[str, ast.FunctionDef]]:
+    functions : list[tuple[str, ast.FunctionDef]] = []
 
     for node in ast.iter_child_nodes(program_root):
         if isinstance(node, ast.FunctionDef):
             node.module = program_file_path
-            functions[node.name] = node
+            functions.append((node.name, node))
         if isinstance(node, ast.ImportFrom):
             if node.module == 'nagini_contracts.contracts':
                 continue
@@ -34,9 +34,9 @@ def extract_functions(program_root: ast.Module, program_file_path: str) -> dict[
                     if isinstance(imported_module_node, ast.FunctionDef):
                         if imported_module_node.name in imported_names or '*' in imported_names:
                             imported_module_node.module = spec.origin
-                            functions[imported_module_node.name] = imported_module_node
+                            functions.append((imported_module_node.name, imported_module_node))
     
-    for function_name, function_node in functions.items():
+    for function_name, function_node in functions:
         print(f"Extracted function {function_name} from module {function_node.module}")
 
     return functions

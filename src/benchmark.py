@@ -31,9 +31,6 @@ else:
     benchmark_dir = os.path.join(user_data_directory, benchmark_dir_name)
 
 
-# Path to the existing 'theories' folder
-existing_theories_path = os.path.join(os.path.dirname(__file__), '..', 'converted', 'theories')
-
 print(f"Running benchmark and writing results to {benchmark_dir}:")
 
 for program_file_path, entry_point_method in TEST_CASES:
@@ -42,13 +39,6 @@ for program_file_path, entry_point_method in TEST_CASES:
     
     os.makedirs(output_dir, exist_ok=True)
     
-    if os.path.exists(existing_theories_path):
-        theories_dest_path = os.path.join(output_dir, 'theories')
-        if not os.path.exists(theories_dest_path):
-            shutil.copytree(existing_theories_path, theories_dest_path)
-            print(f"Copied existing 'theories' folder from {existing_theories_path} to {theories_dest_path}")
-        else:
-            print(f"'theories' folder already exists at {theories_dest_path}")
     find_invariants(os.path.normpath(os.path.join(os.path.dirname(__file__), program_file_path)), entry_point_method, output_dir)
 
 

@@ -1,66 +1,68 @@
 import re
 
-def parse_all_daikon_invariants(daikon_output):
-
+def parse_daikon_output(daikon_output):
+ 
     invariants = []
 
-    # Regex patterns for Daikon invariants
-    orig_pattern = r"(\w+)\s*(==|!=|<=|>=|>|<)\s*orig\((\w+)\)"
-    size_pattern = r"size\((\w+)\[\]\)"
-    general_comparison_pattern = r"(\w+)\s*(==|!=|<=|>=|>|<)\s*(\w+|\d+)"
-    subtraction_pattern = r"(\w+)\s*-\s*(\w+)\s*-\s*(\w+)\s*(==|!=|<=|>=|>|<)\s*([\w\d-]+)"
-    has_only_one_value_pattern = r"(\w+)\s+has\s+only\s+one\s+value"
+    def process_line(line):
+        """
+        Process a single line of Daikon output and convert it to Nagini-compatible format.
+        """
+        # Replace `orig` with `Old`
+        line = line.replace("orig(", "Old(").replace(")", ")")
 
- 
-    def replace_size_and_null(line):
-        line = re.sub(size_pattern, r"len(\1)", line)  
-        line = line.replace("null", "None") 
-        return line
+        # Replace `size(array[])` with `len(array)`
+        line = line.replace("size(", "len(").replace("[])", ")")
 
-    def is_valid_invariant(left, operator, right):
-        if left.isdigit() and right.isdigit():
-            return False  
-        if left == right and operator in ["==", "<=", ">="]:
-            return False  
-        return True
+        # Convert `null` to `None`
+        line = line.replace("null", "None")
+
+        # Handle "one of {}" by converting to or
+        if "one of {" in line:
+            match = re.search(r"(\w+)\s+one\s+of\s+\{(.+?)\}", line)
+            if match:
+                variable = match.group(1)
+                values = match.group(2).split(",")
+                values = [value.strip() for value in values]
+                conditions = " or ".join(f"{variable} == {value}" for value in values)
+                return f"Invariant({conditions})"
+
+        # Handle `sorted(reverse=True)`
+        if "sorted(reverse=True)" in line:
+            return f"Invariant({line.strip()})"
+
+        # Wrap mathematical and logical operations in `Invariant()` if not already wrapped
+        if any(op in line for op in ["==", "!=", ">=", "<=", ">", "<", "%", "**", "-", "+"]):
+            if not line.startswith("Invariant("):
+                return f"Invariant({line.strip()})"
+
+        # Handle "has only one value"
+        if "has only one value" in line:
+            if not line.startswith("Invariant("):
+                return f"Invariant({line.strip()})"
+
+        # Default case: return as-is
+        return line.strip()
 
     # Process the Daikon output line by line
     lines = [line.strip() for line in daikon_output.splitlines() if line.strip()]
+
     for line in lines:
-        # Replace size(a[]) with len(a) and null with None
-        line = replace_size_and_null(line)
+        # Skip metadata or irrelevant lines
+        if any(
+            line.startswith(prefix)
+            for prefix in [
+                "Daikon version", "Reading declaration files", "Exiting Daikon", "=",
+                "iter_inv_0()", "loop_inv_0()", "End of report", "No return from procedure"
+            ]
+        ):
+            continue
 
-        # Parse orig(x) patterns
-        if re.search(orig_pattern, line):
-            match = re.findall(orig_pattern, line)
-            for var, operator, orig_var in match:
-                invariants.append(f"Invariant({var} {operator} Old({orig_var}))")
+        # Process each valid line
+        processed_line = process_line(line)
+        if processed_line:
+            invariants.append(processed_line)
 
-        # Parse "has only one value"
-        elif re.search(has_only_one_value_pattern, line):
-            match = re.findall(has_only_one_value_pattern, line)
-            for var in match:
-                invariants.append(
-                    f"Invariant(Forall(int i, Implies(0 <= i and i < len({var}), {var}[i] == {var}[0])))"
-                )
-
-        # Parse subtraction relationships
-        elif re.search(subtraction_pattern, line):
-            match = re.findall(subtraction_pattern, line)
-            for var1, var2, var3, operator, value in match:
-                invariants.append(f"Invariant({var1} - {var2} - {var3} {operator} {value})")
-
-        # Parse general comparisons
-        elif re.search(general_comparison_pattern, line):
-            match = re.findall(general_comparison_pattern, line)
-            for left, operator, right in match:
-                if is_valid_invariant(left, operator, right):
-                   
-                    left = left.replace("len", "len(a)") if left == "len" else left
-                    right = right.replace("len", "len(a)") if right == "len" else right
-                    invariants.append(f"Invariant({left} {operator} {right})")
-
-    # Remove duplicates
+    # Remove duplicates and sort for consistency
     unique_invariants = sorted(set(invariants))
-
     return unique_invariants

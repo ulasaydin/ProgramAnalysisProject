@@ -2,6 +2,7 @@ import argparse
 import dis
 import importlib.util
 import subprocess
+from copy import deepcopy
 from datetime import datetime
 import ast
 import os
@@ -10,12 +11,16 @@ import sys
 sys.path.append(os.path.dirname(__file__))
 
 from invariant_inserter import insert_invariants_in_ast
+from invariant_remover import InvariantRemover
 from daikon_to_nagini_parser import parse_daikon_output
 from util import remove_nagini_annotations
 from config import APP_AUTHOR, APP_NAME
 from platformdirs import user_data_dir
+from instrumenter import Instrumenter
 from concolic_test_case_generator import ConcolicTestCaseGenerator
 from util import write_to_file, extract_functions, function_ast_to_bytecode
+
+
 
 def find_invariants(program_file_path: str, entry_point_function: str, output_dir: str):
     print(f"Finding invariants for {entry_point_function} in {program_file_path}:")
@@ -28,8 +33,10 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
 
     functions: dict[str, tuple[ast.FunctionDef, dis.Bytecode]] = {}
 
-    for function_name, function_ast in extract_functions(program_root, program_file_path).items():
-        function_without_annotations = remove_nagini_annotations(function_ast)
+    functions_in_order = extract_functions(program_root, program_file_path)
+
+    for function_name, function_ast in functions_in_order:
+        function_without_annotations = remove_nagini_annotations(deepcopy(function_ast))
         functions[function_name] = (function_without_annotations, function_ast_to_bytecode(function_without_annotations))
 
     if entry_point_function not in functions:
@@ -129,27 +136,36 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     # TODO: (Jimena) Insert invariant annotations in program ast
 
     output_program_path = os.path.join(output_dir, f"{os.path.basename( program_file_path).replace('.py', '_with_invariants.py')}")
-    insert_invariants_in_ast(
-        program_file_path, nagini_invariants, output_program_path)
-    print(f"Invariants inserted into the AST in {output_program_path}");
+    annotated_program = insert_invariants_in_ast(functions_in_order, entry_point_function, nagini_invariants)
+    write_to_file(output_program_path, annotated_program)
+    print(f"Invariants inserted into the AST in {output_program_path}")
+
 
     # TODO: Output program with invariants to output directory
-
-    # TODO: (Ulas) Run Nagini on the annotated program to check invariants
-    print("Running Nagini to verify the annotated program...")
-    nagini_result = subprocess.run(["nagini", "--select", entry_point_function, output_program_path],capture_output=True,text=True)
-    if nagini_result.returncode == 0:
-       print("Nagini verification succeeded!")
-       print("Output:")
-       print(nagini_result.stdout)  
-    else:
-       print("Nagini verification failed.")
-       print("Standard Output:")
-       print(nagini_result.stdout)
-       print("Error Output:")
-       print(nagini_result.stderr) 
-    
-    print("---")
+    while 1:
+        # TODO: (Ulas) Run Nagini on the annotated program to check invariants
+        print("Running Nagini to verify the annotated program...")
+        nagini_result = subprocess.run(["nagini", "--ide-mode", "--select", entry_point_function, output_program_path], capture_output=True, text=True)
+        if nagini_result.returncode == 0:
+            print("Nagini verification succeeded!")
+            print("Output:")
+            print(nagini_result.stdout)  
+            break
+        else:
+            print("Nagini verification failed.")
+            print("Standard Output:")
+            print(nagini_result.stdout)
+            print("Standard Error:")
+            print(nagini_result.stderr)
+            invalid_invariant_line_number = int(nagini_result.stdout.split(':')[2])
+            remover = InvariantRemover(entry_point_function, invalid_invariant_line_number)
+            new_tree = remover.visit(ast.parse(annotated_program))
+            annotated_program = ast.unparse(new_tree)
+            write_to_file(output_program_path, annotated_program)
+            print("Error Output:")
+            print(nagini_result.stderr) 
+        
+        print("---")
 
 
 if __name__ == '__main__':

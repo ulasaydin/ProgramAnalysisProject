@@ -34,6 +34,7 @@ class InvariantInserter(ast.NodeTransformer):
         loop_node.body = updated_body
         return loop_node
 
+
     def visit_FunctionDef(self, node):
         # Modify each loop in the function body to include invariants
         for i, child in enumerate(node.body):
@@ -41,12 +42,20 @@ class InvariantInserter(ast.NodeTransformer):
                 node.body[i] = self.insert_invariants_in_loop(child)
         return node
 
-def insert_invariants_in_ast(program_file_path, invariants, output_program_path):
-    with open(program_file_path, "r") as file:
-        program_ast = ast.parse(file.read())
-
-    inserter = InvariantInserter(invariants)
-    modified_ast = inserter.visit(program_ast)
-
-    with open(output_program_path, "w") as file:
-        file.write(ast.unparse(modified_ast))
+def insert_invariants_in_ast(
+        functions: list[tuple[str, ast.FunctionDef]], 
+        entry_point_function_name: str, 
+        invariants: list) -> str:
+    module_body = [
+        ast.ImportFrom(module="typing", names=[ast.alias(name="List", asname=None)], level=0),
+        ast.ImportFrom(module="nagini_contracts.contracts", names=[
+            ast.alias(name="*", asname=None)], level=0)
+    ]
+    for function_name, function_ast in functions:
+        if function_name == entry_point_function_name:
+            inserter = InvariantInserter(invariants)
+            modified_ast = inserter.visit(function_ast)
+            module_body.append(modified_ast)
+        else:
+            module_body.append(function_ast)
+    return ast.unparse(ast.Module(body=module_body, type_ignores=[]))
