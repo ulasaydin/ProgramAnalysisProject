@@ -76,7 +76,7 @@ Invariant(Old(ic) <= len(a))
 | Required Invariant | Found Invariant | Match |
 |--------------------|-----------------|-------|
 | `Invariant(Acc(list_pred(a)))` | `Invariant(Acc(list_pred(a)))` | Yes |
-| `Invariant(len(a) == Old(len(a)))` | `Invariant(a == Old(a))` | Yes |
+| `Invariant(len(a) == Old(len(a)))` | `Invariant(a == Old(a))` | No |
 | `Invariant(0 <= ic and ic <= len(a))` | `Invariant(ic >= Old(ic))`, `Invariant(ic <= len(a))`, `Invariant(Old(ic) >= 0)` | Yes |
 
 ## max_array
@@ -192,7 +192,7 @@ Invariant(Old(i) >= 0)
 | Required Invariant | Found Invariant | Match |
 |--------------------|-----------------|-------|
 | `Invariant(Acc(list_pred(a)))` | `Invariant(Acc(list_pred(a)))` | Yes |
-| `Invariant(len(a) == Old(len(a)))` | `Invariant(a == Old(a))` | Yes |
+| `Invariant(len(a) == Old(len(a)))` | `Invariant(a == Old(a))` | No |
 | `Invariant(0 <= i and i <= len(a))` | `Invariant(i <= len(a))`, `Invariant(Old(i) >= 0)` | Yes |
 | `Invariant(s == sum_pure(a, 0, i))` | - | No |
 
@@ -229,7 +229,7 @@ Invariant(Old(i) <= len(arr))
 | Required Invariant | Found Invariant | Match |
 |--------------------|-----------------|-------|
 | `Invariant(Acc(list_pred(arr)))` | `Invariant(Acc(list_pred(arr)))` | Yes |
-| `Invariant(len(arr) == Old(len(arr)))` | `Invariant(arr == Old(arr))` | Yes |
+| `Invariant(len(arr) == Old(len(arr)))` | `Invariant(arr == Old(arr))` | No |
 | `Invariant(l == len(arr))` | `Invariant(l == len(arr))` | Yes |
 | `Invariant(0 <= i and i <= l)` | `Invariant(i <= l)`, `Invariant(i <= len(arr))`, `Invariant(Old(i) >= 0)` | Yes |
 | `Invariant(Forall(int, lambda j: Implies(0 <= j and j < i, arr[j] != x)))` | - | No |
