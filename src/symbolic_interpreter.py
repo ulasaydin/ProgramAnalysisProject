@@ -59,6 +59,7 @@ class SymbolicInterpreter(Python39Interpreter):
             container = self.heap[inputs[0].address]
             if isinstance(container, SymbolicIntegerArray):
                 self.constraints.append(container.length() >= 0)
+                self.constraints.append(container.length() < 10)
                 return container.length()
 
     def step_BINARY_SUBSCR(self, instruction):
