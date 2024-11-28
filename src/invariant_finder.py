@@ -27,8 +27,7 @@ def get_invariant_errors_line_numbers(nagini_output):
         if line == "Errors:":
             reached_error_lines = True
         elif reached_error_lines:
-            if "Loop invariant" in line:
-                return int(line.split(":")[1])
+            return int(line.split(":")[1])
     return None
 
 def find_invariants(program_file_path: str, entry_point_function: str, output_dir: str):
@@ -146,7 +145,6 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
     write_to_file(output_program_path, annotated_program)
     print(f"Invariants inserted into the AST in {output_program_path}")
     while 1:
-        # TODO: (Ulas) Run Nagini on the annotated program to check invariants
         print("Running Nagini to verify the annotated program...")
         nagini_result = subprocess.run(["nagini", "--ide-mode", "--select", entry_point_function, output_program_path], capture_output=True, text=True)
         if nagini_result.returncode == 0:
@@ -156,7 +154,6 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
             break
         else:
             print("Nagini verification failed.")
-            print("Standard Output:")
             print(nagini_result.stdout)
             print("Standard Error:")
             print(nagini_result.stderr)
@@ -167,6 +164,10 @@ def find_invariants(program_file_path: str, entry_point_function: str, output_di
                 break
             remover = InvariantRemover(entry_point_function, invalid_invariant_line_number)
             new_tree = remover.visit(ast.parse(annotated_program))
+            if not remover.removed_invariants:
+                print("Could not find valid invariants")
+                print("---")
+                break
             annotated_program = ast.unparse(new_tree)
             write_to_file(output_program_path, annotated_program)
             print("Error Output:")
