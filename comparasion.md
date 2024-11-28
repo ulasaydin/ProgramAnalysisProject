@@ -1,5 +1,17 @@
 # Comparasion
 
+|    Program    | Required invariants |
+|---------------|---------------------|
+| arrays_fill_a | 2/3 |
+| hashCode_a    | 3/3 |
+| max_array     | 2/3 |
+| min_array     | 2/3 |
+| sum_one_to_n  | 1/2 |
+| sum_array     | 3/4 |
+| linear_search | 4/5 |
+| square        | 2/2 |
+| cube          | 2/3 |
+
 ## arrays_fill_a
 
 ### Required invariants
@@ -221,3 +233,67 @@ Invariant(Old(i) <= len(arr))
 | `Invariant(l == len(arr))` | `Invariant(l == len(arr))` | Yes |
 | `Invariant(0 <= i and i <= l)` | `Invariant(i <= l)`, `Invariant(i <= len(arr))`, `Invariant(Old(i) >= 0)` | Yes |
 | `Invariant(Forall(int, lambda j: Implies(0 <= j and j < i, arr[j] != x)))` | - | No |
+
+## square
+
+### Required invariants
+
+```
+Invariant(0 <= i and i <= n)
+Invariant(result == i * i)
+```
+
+### Found invariants
+```
+Invariant(result >= i)
+Invariant(result >= Old(result))
+Invariant(result == i * i)
+Invariant(n >= i)
+Invariant(n == Old(n))
+Invariant(Old(result) >= Old(i))
+Invariant(Old(result) >= 0)
+Invariant(Old(i) >= 0)
+```
+
+### Result
+
+| Required Invariant | Found Invariant | Match |
+|--------------------|-----------------|-------|
+| `Invariant(0 <= i and i <= n)` | `Invariant(n >= i)`, `Invariant(Old(i) >= 0)`, `Invariant(n == Old(n))` | Yes |
+| `Invariant(result == i * i)` | `Invariant(result == i * i)` | Yes |
+
+## cube
+
+### Required invariants
+
+```
+Invariant(0 <= i and i <= n)
+Invariant(square == i * i)
+Invariant(result == i * i * i)
+```
+
+### Found invariants
+
+```
+Invariant(square >= i)
+Invariant(square == i * i)
+Invariant(result >= square)
+Invariant(result >= i)
+Invariant(result >= Old(result))
+Invariant(n >= i)
+Invariant(n == Old(n))
+Invariant(Old(square) >= Old(i))
+Invariant(Old(square) >= 0)
+Invariant(Old(result) >= Old(square))
+Invariant(Old(result) >= Old(i))
+Invariant(Old(result) >= 0)
+Invariant(Old(i) >= 0)
+```
+
+### Result
+
+| Required Invariant | Found Invariant | Match |
+|--------------------|-----------------|-------|
+| `Invariant(0 <= i and i <= n)` | `Invariant(n >= i)`, `Invariant(Old(i) >= 0)`, `Invariant(n == Old(n))` | Yes |
+| `Invariant(square == i * i)` | `Invariant(square == i * i)` | Yes |
+| `Invariant(result == i * i * i)` | - | No |
